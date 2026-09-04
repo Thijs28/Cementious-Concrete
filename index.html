@@ -3,40 +3,122 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Horizontal Scroll</title>
+    <title>Material Interdependency Matrix</title>
     <style>
+        :root {
+            --bg: #121212;
+            --text: #ffffff;
+            --cell-bg: #1e1e1e;
+            --hover: #4CAF50;
+            --header: #333333;
+        }
         body, html {
-            margin: 0;
-            padding: 0;
-            height: 100%;
-            overflow-x: auto;
-            overflow-y: hidden;
+            margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg); color: var(--text); display: flex; flex-direction: column;
+            align-items: center; height: 100vh; overflow: hidden;
         }
-        .container {
-            display: flex;
-            height: 100vh;
-            width: 300vw; 
+        .dashboard {
+            display: flex; gap: 20px; padding: 20px; width: 95vw; height: 90vh;
         }
-        .section {
-            width: 100vw;
-            height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 3rem;
-            font-family: Arial, sans-serif;
-            color: white;
+        .matrix-container {
+            flex: 2; display: grid; grid-template-columns: 120px repeat(6, 1fr);
+            grid-template-rows: 120px repeat(6, 1fr); gap: 5px;
         }
-        #box1 { background-color: #e63946; }
-        #box2 { background-color: #457b9d; }
-        #box3 { background-color: #2a9d8f; }
+        .header {
+            background-color: var(--header); display: flex; align-items: center;
+            justify-content: center; text-align: center; font-size: 0.85rem;
+            font-weight: bold; padding: 10px; border-radius: 4px;
+        }
+        .cell {
+            background-color: var(--cell-bg); border-radius: 4px; cursor: pointer;
+            transition: all 0.3s ease; position: relative;
+        }
+        .cell:hover { background-color: var(--hover); transform: scale(1.05); z-index: 10; box-shadow: 0 0 15px rgba(76, 175, 80, 0.5); }
+        .cell.diagonal { background-color: #2a2a2a; cursor: default; }
+        .cell.diagonal:hover { background-color: #2a2a2a; transform: none; box-shadow: none; }
+        
+        .info-panel {
+            flex: 1; background-color: var(--cell-bg); border-radius: 8px; padding: 30px;
+            display: flex; flex-direction: column; justify-content: center;
+        }
+        h2 { margin-top: 0; color: var(--hover); }
+        .node-tags { display: flex; gap: 10px; margin-bottom: 20px; }
+        .tag { background-color: var(--header); padding: 5px 10px; border-radius: 15px; font-size: 0.8rem; text-transform: uppercase; }
+        #description { font-size: 1.1rem; line-height: 1.6; color: #cccccc; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="section" id="box1">Page 1 (Scroll Right ➔)</div>
-        <div class="section" id="box2">Page 2</div>
-        <div class="section" id="box3">Page 3</div>
+    <h1 style="margin: 15px 0;">Assignment 1: Domain Interdependencies[cite: 1]</h1>
+    <div class="dashboard">
+        <div class="matrix-container" id="matrix">
+            <!-- JavaScript populates the matrix grid -->
+        </div>
+        <div class="info-panel">
+            <h2 id="panel-title">Select an Intersection</h2>
+            <div class="node-tags" id="panel-tags"></div>
+            <div id="description">Select a cell in the matrix to critically analyse the interdependencies between the different domains, demonstrating how changes in one domain influence others[cite: 1].</div>
+        </div>
     </div>
+
+    <script>
+        const domains = ["Scientific", "Technical", "Geo-political", "Historical", "Sensory", "Ecological"];
+        
+        const interdependencies = {
+            "Scientific-Technical": "The chemical calcination process requires kilns to reach 1450°C, mandating high-energy technical manufacturing methods.",
+            "Scientific-Ecological": "Concrete absorbs CO2 over its lifespan (carbonation), partially offsetting the massive initial embodied carbon of its chemical formulation.",
+            "Technical-Geo-political": "High transport costs of heavy raw materials force production to remain localized, creating regional monopolies.",
+            "Technical-Ecological": "Clinker production generates vast amounts of waste heat and accounts for approximately 8% of global CO2 emissions.",
+            "Geo-political-Ecological": "The global sand shortage drives illegal mining operations, permanently disrupting river flora and fauna ecosystems.",
+            "Historical-Sensory": "The Brutalist architectural movement of the 1950s exploited the material's unique sensory qualities, popularizing the raw, unfinished aesthetic of concrete[cite: 1].",
+            "Historical-Technical": "The 1824 patent of Portland cement standardized the forming methods and industrial machinery still largely used today.",
+            "Sensory-Ecological": "Urban heat island effects are exacerbated by the high thermal mass and albedo properties of large concrete surfaces in cities."
+        };
+
+        const matrix = document.getElementById('matrix');
+        
+        // Top-left empty cell
+        matrix.appendChild(document.createElement('div'));
+        
+        // Column Headers
+        domains.forEach(domain => {
+            const el = document.createElement('div');
+            el.className = 'header'; el.textContent = domain;
+            matrix.appendChild(el);
+        });
+
+        // Rows
+        domains.forEach(rowDomain => {
+            // Row Header
+            const rowHeader = document.createElement('div');
+            rowHeader.className = 'header'; rowHeader.textContent = rowDomain;
+            matrix.appendChild(rowHeader);
+            
+            // Intersection Cells
+            domains.forEach(colDomain => {
+                const cell = document.createElement('div');
+                cell.className = 'cell';
+                
+                if (rowDomain === colDomain) {
+                    cell.classList.add('diagonal');
+                } else {
+                    cell.addEventListener('click', () => updatePanel(rowDomain, colDomain));
+                }
+                matrix.appendChild(cell);
+            });
+        });
+
+        function updatePanel(domain1, domain2) {
+            document.getElementById('panel-title').textContent = "Identified Interdependency";
+            
+            const tags = document.getElementById('panel-tags');
+            tags.innerHTML = `<span class="tag">${domain1}</span><span class="tag">${domain2}</span>`;
+            
+            const key1 = `${domain1}-${domain2}`;
+            const key2 = `${domain2}-${domain1}`;
+            const desc = interdependencies[key1] || interdependencies[key2] || "Requires further research to identify weaknesses, opportunities, and leverage points within this specific intersection[cite: 1].";
+            
+            document.getElementById('description').textContent = desc;
+        }
+    </script>
 </body>
 </html>
