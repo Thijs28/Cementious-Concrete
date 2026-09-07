@@ -3,53 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Semantic Knowledge Graph | Material Interdependencies</title>
+    <title>Semantic Knowledge Graph | Macro Scale Material Literacy</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-color: #0a0a0c;
+            --bg-color: #060608;
             --text-primary: #f0f0f0;
-            --text-muted: #8a8a8a;
+            --text-muted: #7a7a7a;
             --accent: #c5a059;
-            --panel-bg: rgba(12, 12, 15, 0.95);
+            --panel-bg: rgba(10, 10, 12, 0.97);
         }
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: var(--bg-color); color: var(--text-primary); font-family: 'Inter', sans-serif; overflow: hidden; }
         
         #graph-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
-        .node-circle { transition: fill 0.3s, stroke 0.3s; cursor: pointer; }
-        .node-label { font-family: 'EB Garamond', serif; font-size: 16px; fill: var(--text-primary); pointer-events: none; text-shadow: 0 4px 12px rgba(0,0,0,1); }
-        .link-line { stroke: #444444; stroke-opacity: 0.7; fill: none; }
-        .link-label { font-family: 'Inter', sans-serif; font-size: 10px; fill: #aaaaaa; text-transform: uppercase; letter-spacing: 1.5px; pointer-events: none; text-anchor: middle; font-weight: 600; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
+        .node-circle { transition: fill 0.3s, stroke 0.3s, r 0.3s; cursor: pointer; }
+        .node-circle:hover { stroke: #ffffff; stroke-width: 2px; }
+        .node-label { font-family: 'EB Garamond', serif; font-size: 13px; fill: var(--text-primary); pointer-events: none; text-shadow: 0 4px 12px rgba(0,0,0,1); transition: opacity 0.3s; }
+        .link-line { stroke: #333333; stroke-opacity: 0.6; fill: none; transition: stroke-opacity 0.3s, stroke 0.3s; }
+        .link-label { font-family: 'Inter', sans-serif; font-size: 8px; fill: #888888; text-transform: uppercase; letter-spacing: 1px; pointer-events: none; text-anchor: middle; font-weight: 600; text-shadow: 0 2px 4px rgba(0,0,0,0.9); opacity: 0; transition: opacity 0.3s; }
         
-        .dimmed { opacity: 0.08 !important; transition: opacity 0.5s ease; }
-        .highlighted { opacity: 1 !important; transition: opacity 0.5s ease; }
+        /* Reveal labels on zoom/hover */
+        .show-labels { opacity: 1 !important; }
+        .dimmed { opacity: 0.05 !important; transition: opacity 0.4s ease; filter: grayscale(100%); }
+        .highlighted { opacity: 1 !important; transition: opacity 0.4s ease; }
+        .highlighted-link { stroke: var(--accent) !important; stroke-opacity: 0.8 !important; stroke-width: 1.5px !important; }
         
         #detail-panel {
-            position: absolute; top: 0; right: -700px; width: 550px; height: 100%;
-            background: var(--panel-bg); backdrop-filter: blur(20px); border-left: 1px solid #2a2a2a;
-            padding: 50px 45px; box-sizing: border-box; transition: right 0.6s cubic-bezier(0.19, 1, 0.22, 1);
-            overflow-y: auto; z-index: 100;
+            position: absolute; top: 0; right: -750px; width: 600px; height: 100%;
+            background: var(--panel-bg); backdrop-filter: blur(25px); border-left: 1px solid #1a1a1a;
+            padding: 50px; box-sizing: border-box; transition: right 0.7s cubic-bezier(0.19, 1, 0.22, 1);
+            overflow-y: auto; z-index: 100; box-shadow: -10px 0 30px rgba(0,0,0,0.8);
         }
         #detail-panel.active { right: 0; }
         
-        .close-btn { position: absolute; top: 30px; right: 40px; background: none; border: none; color: var(--text-muted); font-size: 28px; cursor: pointer; transition: color 0.2s; }
+        .close-btn { position: absolute; top: 30px; right: 40px; background: none; border: none; color: var(--text-muted); font-size: 32px; cursor: pointer; transition: color 0.2s; }
         .close-btn:hover { color: var(--text-primary); }
         
-        .domain-tag { display: inline-block; padding: 5px 12px; border: 1px solid #444; border-radius: 20px; font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--accent); margin-bottom: 20px; }
-        h1 { font-family: 'EB Garamond', serif; font-size: 2.6rem; font-weight: 400; margin: 0 0 15px 0; line-height: 1.1; }
-        .meta-data { font-size: 0.85rem; color: var(--text-muted); border-bottom: 1px solid #333; padding-bottom: 20px; margin-bottom: 30px; line-height: 1.5; text-transform: uppercase; letter-spacing: 1px;}
+        .domain-tag { display: inline-block; padding: 6px 14px; border: 1px solid #333; border-radius: 20px; font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--accent); margin-bottom: 20px; background: rgba(197, 160, 89, 0.05); }
+        h1 { font-family: 'EB Garamond', serif; font-size: 2.8rem; font-weight: 400; margin: 0 0 15px 0; line-height: 1.1; }
+        .meta-data { font-size: 0.85rem; color: var(--text-muted); border-bottom: 1px solid #222; padding-bottom: 20px; margin-bottom: 30px; line-height: 1.5; text-transform: uppercase; letter-spacing: 1px;}
         
-        .media-container { width: 100%; aspect-ratio: 16/9; background: #000; margin-bottom: 30px; border-radius: 4px; overflow: hidden; position: relative; border: 1px solid #333; }
-        .media-container img { width: 100%; height: 100%; object-fit: cover; opacity: 0.8; transition: opacity 0.3s; }
+        .media-container { width: 100%; aspect-ratio: 16/9; background: #000; margin-bottom: 30px; border-radius: 4px; overflow: hidden; position: relative; border: 1px solid #222; }
+        .media-container img { width: 100%; height: 100%; object-fit: cover; opacity: 0.7; transition: opacity 0.3s; }
         .media-container img:hover { opacity: 1; }
         
         .content-body { font-size: 1.05rem; line-height: 1.7; font-weight: 300; color: #cccccc; }
         
-        .interdependency-list { margin-top: 40px; padding-top: 25px; border-top: 1px solid #333; }
+        .interdependency-list { margin-top: 40px; padding-top: 25px; border-top: 1px solid #222; }
         .interdependency-list h3 { font-family: 'EB Garamond', serif; font-size: 1.6rem; font-weight: 400; margin-bottom: 20px; color: var(--text-primary); }
-        .interdependency-card { background: rgba(255,255,255,0.03); border: 1px solid #222; padding: 15px; border-radius: 6px; margin-bottom: 12px; }
-        .relation-tag { font-size: 0.75rem; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 5px; }
+        .interdependency-card { background: rgba(255,255,255,0.02); border: 1px solid #1a1a1a; padding: 15px; border-radius: 6px; margin-bottom: 10px; transition: background 0.2s; cursor: pointer; }
+        .interdependency-card:hover { background: rgba(255,255,255,0.05); border-color: #333; }
+        .relation-tag { font-size: 0.75rem; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 5px; opacity: 0.8; }
         .relation-target { font-weight: 600; color: #fff; font-size: 1.1rem; }
     </style>
 </head>
@@ -78,106 +83,146 @@
     <script>
         const data = {
             nodes: [
-                { 
-                    id: "Concrete_Matrix", group: "Core", size: 10, title: "Portland Cement Concrete", domain: "Multi-Domain", 
-                    meta: "The Composite Baseline", 
-                    desc: "Concrete is a mineral composite, not a single material, where cement acts as the binder and sand and gravel make up most of the volume[cite: 3]. When water is added, the hydration process begins, binding the aggregates into a solid material with a typical grey appearance[cite: 3].", 
-                    img: "https://images.unsplash.com/photo-1518002171953-a080ee817e1f?auto=format&fit=crop&w=1000&q=80" 
-                },
-                { 
-                    id: "Kiln_Calcination", group: "Technical", size: 7, title: "Kiln Calcination", domain: "Technical Domain", 
-                    meta: "Energy Intensive Processing (1450°C)", 
-                    desc: "The most energy-intensive part of the process where raw materials enter a rotary kiln reaching 1450°C[cite: 3]. This calcination process (CaCO₃ → CaO + CO₂) changes the chemical composition, accounting for about 80% of the volume and roughly 60% of CO₂ emissions[cite: 3]. It requires 3.2–3.5 GJ of thermal energy per tonne of clinker[cite: 3].", 
-                    img: "https://images.unsplash.com/photo-1504257121735-02ebcb710034?auto=format&fit=crop&w=1000&q=80" 
-                },
-                { 
-                    id: "Rotary_Kiln", group: "Historical", size: 6, title: "The Rotary Kiln (1885)", domain: "Historical Domain", 
-                    meta: "Technological Paradigm Shift", 
-                    desc: "Patented by Frederick Ransome in 1885, the rotary kiln allowed material to move continuously through the firing process[cite: 3]. This shifted production from small plants with expensive cement to economies of scale, cheaper cement, and mass construction[cite: 3].", 
-                    img: "https://images.unsplash.com/photo-1590059345229-37f26fc198ce?auto=format&fit=crop&w=1000&q=80" 
-                },
-                { 
-                    id: "Territorial_Control", group: "GeoPolitical", size: 7, title: "Territorial Infrastructure", domain: "Geo-political Domain", 
-                    meta: "Imperial & Developmental State Expansion", 
-                    desc: "During the 19th century, cement became connected to the industrial state, serving as an infrastructure of territorial control[cite: 3]. It was used to build ports, docks, military installations, and railways to connect mines to export markets and control colonial territories[cite: 3].", 
-                    img: "https://images.unsplash.com/photo-1586528116311-ad8ed745eb33?auto=format&fit=crop&w=1000&q=80" 
-                },
-                { 
-                    id: "Steel_Reinforcement", group: "Scientific", size: 8, title: "Strain Compatibility", domain: "Scientific & Technical Domain", 
-                    meta: "Composite Mechanics", 
-                    desc: "Concrete has a high compressive strength but a low tensile strength (approximately 10% of compressive capacity), making it brittle and prone to cracking[cite: 3]. Steel reinforcement resolves this because both materials share nearly identical coefficients of thermal expansion[cite: 3]. They bond to create 'strain compatibility', allowing them to deform together under load[cite: 3].", 
-                    img: "https://images.unsplash.com/photo-1533727763132-75ebff00c3b8?auto=format&fit=crop&w=1000&q=80" 
-                },
-                { 
-                    id: "Recycled_Aggregate", group: "Ecological", size: 6, title: "RCA Recovery Limitations", domain: "Ecological Domain", 
-                    meta: "End of Life Processing", 
-                    desc: "At the end of life, concrete rubble can be crushed into Recycled Concrete Aggregate (RCA)[cite: 3]. However, technical recycling challenges arise because old cement paste alters workability and strength, and embedded steel reinforcement must be separated[cite: 3].", 
-                    img: "https://images.unsplash.com/photo-1611273426858-450d8e3c9cce?auto=format&fit=crop&w=1000&q=80" 
-                },
-                { 
-                    id: "Carbon_Economy", group: "GeoPolitical", size: 7, title: "The Carbon Geopolitics", domain: "Geo-political & Ecological", 
-                    meta: "Contemporary Political Economy", 
-                    desc: "Because heating limestone chemically releases CO₂ during calcination, decarbonizing fuel cannot eliminate all emissions[cite: 3]. This environmental problem has created a new political economy centered around carbon taxes, emissions trading, and green public procurement[cite: 3].", 
-                    img: "https://images.unsplash.com/photo-1480796927426-f609979314bd?auto=format&fit=crop&w=1000&q=80" 
-                },
-                { 
-                    id: "Sensory_Mass", group: "Sensory", size: 6, title: "Sensory Mass Properties", domain: "Sensory & Scientific", 
-                    meta: "Optical, Thermal, and Acoustic Manifestation", 
-                    desc: "Concrete's high material density yields excellent sound insulation, while its thermal mass allows it to store and release heat over time[cite: 3]. Visually, its grey colour and reflectance (~40% for smooth surfaces) change based on weathering, carbonation, and the exposure of aggregates[cite: 3].", 
-                    img: "https://images.unsplash.com/photo-1524311583145-d5593bd3502a?auto=format&fit=crop&w=1000&q=80" 
-                }
+                // CORE & OVERARCHING
+                { id: "Concrete", group: "Core", size: 14, title: "Portland Cement Concrete", domain: "Multi-Domain", meta: "The Mineral Composite", desc: "Concrete is a mineral composite; it is not one single material, but a mixture of components where cement acts as the binder, while sand and gravel make up most of the volume[cite: 3].", img: "https://images.unsplash.com/photo-1518002171953-a080ee817e1f?auto=format&fit=crop&w=1000&q=80" },
+                { id: "Portland_Cement", group: "Core", size: 10, title: "Portland Cement (Binder)", domain: "Scientific & Technical", meta: "The Hydraulic Binder", desc: "The powder binder that, when combined with water, initiates a chemical reaction called hydration to bind sand and aggregates[cite: 3].", img: "https://images.unsplash.com/photo-1589939705384-5185137a7f0f?auto=format&fit=crop&w=1000&q=80" },
+
+                // SCIENTIFIC DOMAIN
+                { id: "Limestone", group: "Scientific", size: 6, title: "Limestone (CaCO₃)", domain: "Scientific Domain", meta: "Primary Calcium Source", desc: "The most important raw material, mainly consisting of calcium carbonate[cite: 3]. It is heated and chemically transformed during production[cite: 3].", img: "https://images.unsplash.com/photo-1620646233562-f2a31f137d11?auto=format&fit=crop&w=1000&q=80" },
+                { id: "Hydration", group: "Scientific", size: 8, title: "Hydration Reactions", domain: "Scientific Domain", meta: "Chemical Curing (Phase 2)", desc: "The chemical reaction triggered when water is added to cement, hardening the paste and binding aggregates into a solid material[cite: 3].", img: "https://images.unsplash.com/photo-1590059345229-37f26fc198ce?auto=format&fit=crop&w=1000&q=80" },
+                { id: "Alite", group: "Scientific", size: 5, title: "Alite (C₃S)", domain: "Scientific Domain", meta: "Tricalcium Silicate", desc: "Formed between 1200°C and 1450°C, its hydration creates primary structural bonds[cite: 3].", img: "https://images.unsplash.com/photo-1533422902779-babd002f65a1?auto=format&fit=crop&w=1000&q=80" },
+                { id: "Belite", group: "Scientific", size: 5, title: "Belite (C₂S)", domain: "Scientific Domain", meta: "Dicalcium Silicate", desc: "Formed at 1450°C, contributing to long-term strength during hydration[cite: 3].", img: "https://images.unsplash.com/photo-1574689049597-7e615e45a60e?auto=format&fit=crop&w=1000&q=80" },
+                { id: "Carbonation", group: "Scientific", size: 6, title: "Carbonation (Phase 3)", domain: "Scientific & Ecological", meta: "Environmental Aging", desc: "Over time, Ca(OH)₂ reacts with CO₂ to form CaCO₃ + H₂O[cite: 3]. This lowers internal pH and creates vulnerability to chloride-induced depassivation of reinforcing steel[cite: 3].", img: "https://images.unsplash.com/photo-1611273426858-450d8e3c9cce?auto=format&fit=crop&w=1000&q=80" },
+                { id: "Tensile_Weakness", group: "Scientific", size: 7, title: "Tensile Brittleness", domain: "Scientific Domain", meta: "Mechanical Property", desc: "Concrete provides high compressive strength (20–50 MPa) but very low tensile strength (approx. 10% of compressive capacity), making it brittle and prone to cracking under tension[cite: 3].", img: "https://images.unsplash.com/photo-1517424177579-242550186104?auto=format&fit=crop&w=1000&q=80" },
+
+                // TECHNICAL DOMAIN
+                { id: "Quarrying", group: "Technical", size: 6, title: "Quarrying & Crushing", domain: "Technical Domain", meta: "Geological Extraction", desc: "Large quarries extract limestone, clay, and sand using heavy machinery; crushers break large rocks down prior to processing[cite: 3].", img: "https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?auto=format&fit=crop&w=1000&q=80" },
+                { id: "Rotary_Kiln", group: "Technical", size: 8, title: "Rotary Kiln (1450°C)", domain: "Technical Domain", meta: "Calcination Manufacturing (Phase 1)", desc: "Temperatures reach approximately 1450°C, chemically transforming minerals to form clinker[cite: 3]. This stage is energy-intensive, requiring 3.2–3.5 GJ of thermal energy per tonne[cite: 3].", img: "https://images.unsplash.com/photo-1504257121735-02ebcb710034?auto=format&fit=crop&w=1000&q=80" },
+                { id: "Clinker", group: "Technical", size: 6, title: "Clinker", domain: "Technical Domain", meta: "Intermediate Product", desc: "Small, hard, grey/black stones formed in the kiln; it must be rapidly cooled and ground into an extremely fine powder[cite: 3].", img: "https://images.unsplash.com/photo-1581093588401-fbb62a02f120?auto=format&fit=crop&w=1000&q=80" },
+                { id: "Steel_Rebar", group: "Technical", size: 7, title: "Steel Reinforcement", domain: "Technical & Scientific", meta: "Composite Mechanics", desc: "Resolves concrete's tensile weakness by creating a composite system[cite: 3]. Hardening around the steel's ribs creates strong mechanical interlock[cite: 3].", img: "https://images.unsplash.com/photo-1533727763132-75ebff00c3b8?auto=format&fit=crop&w=1000&q=80" },
+                { id: "Precast", group: "Technical", size: 6, title: "Precast Concrete", domain: "Technical Domain", meta: "Factory Formation", desc: "Elements formed inside a controlled factory using molds, then transported and lifted by crane, offering faster installation and controlled waste[cite: 3].", img: "https://images.unsplash.com/photo-1541888087498-500b4dfa053f?auto=format&fit=crop&w=1000&q=80" },
+                { id: "SCMs", group: "Technical", size: 6, title: "SCMs (Fly Ash / GGBS)", domain: "Technical & Ecological", meta: "Supplementary Cementitious Materials", desc: "Industrial by-products like Ground Granulated Blast-furnace Slag (iron) and Fly Ash (coal) that partially replace clinker to reduce environmental impact[cite: 3].", img: "https://images.unsplash.com/photo-1573164574572-cb89e39749b4?auto=format&fit=crop&w=1000&q=80" },
+
+                // GEO-POLITICAL & HISTORICAL DOMAIN
+                { id: "Aspdin_1824", group: "GeoPolitical", size: 6, title: "Aspdin's Patent (1824)", domain: "Historical Domain", meta: "Industrial Britain", desc: "Joseph Aspdin patented Portland cement in 1824, emerging within Britain's existing network of mechanized manufacturing and transportation[cite: 3].", img: "https://images.unsplash.com/photo-1580216719601-5264876b5c2a?auto=format&fit=crop&w=1000&q=80" },
+                { id: "Territorial_Control", group: "GeoPolitical", size: 8, title: "Infrastructures of Control", domain: "Geo-political Domain", meta: "Imperial Expansion (1850–1900)", desc: "Cement became connected to the expansion of the industrial state, highly valuable for ports, docks, railways, and military installations to control territories[cite: 3].", img: "https://images.unsplash.com/photo-1586528116311-ad8ed745eb33?auto=format&fit=crop&w=1000&q=80" },
+                { id: "Welfare_State", group: "GeoPolitical", size: 7, title: "The Developmental State", domain: "Geo-political Domain", meta: "Post-WWII Reconstruction (1945–1970s)", desc: "Rapidly driven by reconstruction, concrete suited large social-housing programs and infrastructure capable of being standardized at enormous scales across both capitalist and socialist blocs[cite: 3].", img: "https://images.unsplash.com/photo-1486325212027-8081e485255e?auto=format&fit=crop&w=1000&q=80" },
+                { id: "Multinational_Oligopoly", group: "GeoPolitical", size: 6, title: "Multinational Corporations", domain: "Geo-political Domain", meta: "Privatization (1980s–2000s)", desc: "Previously state-owned cement industries were merged into transnational networks; by 2003, the top five companies controlled ~42% of the global market outside China[cite: 3].", img: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1000&q=80" },
+                { id: "Carbon_Economy", group: "GeoPolitical", size: 7, title: "Carbon Geopolitics", domain: "Geo-political & Ecological", meta: "Contemporary Challenges", desc: "Because calcination chemically releases CO₂, even decarbonizing fuels won't eliminate emissions, creating a new political economy of carbon taxes and emissions trading[cite: 3].", img: "https://images.unsplash.com/photo-1480796927426-f609979314bd?auto=format&fit=crop&w=1000&q=80" },
+
+                // ECOLOGICAL DOMAIN
+                { id: "Embodied_Carbon", group: "Ecological", size: 8, title: "Embodied Carbon Emissions", domain: "Ecological Domain", meta: "60% of Production CO₂", desc: "The calcination process accounts for about 80% of volume and about 60% of CO₂ emissions[cite: 3].", img: "https://images.unsplash.com/photo-1611273426858-450d8e3c9cce?auto=format&fit=crop&w=1000&q=80" },
+                { id: "Demolition_Waste", group: "Ecological", size: 6, title: "Demolition Waste", domain: "Ecological Domain", meta: "End of Life", desc: "The biggest end-of-life waste stream is concrete rubble; elements must be separated from contaminants like wood, plastic, and reinforcement steel[cite: 3].", img: "https://images.unsplash.com/photo-1528481488960-98d0aeb8c3fb?auto=format&fit=crop&w=1000&q=80" },
+                { id: "RCA", group: "Ecological", size: 7, title: "Recycled Concrete Aggregate", domain: "Ecological & Technical", meta: "Recycling / Downcycling", desc: "Crushed concrete (RCA) can be used as road base or hardcore, but old mortar alters water absorption and strength when incorporated into new concrete[cite: 3].", img: "https://images.unsplash.com/photo-1582236359050-42171121d51a?auto=format&fit=crop&w=1000&q=80" },
+
+                // SENSORY DOMAIN
+                { id: "Reflectance", group: "Sensory", size: 6, title: "Visible Reflectance", domain: "Sensory Domain", meta: "Optical Properties", desc: "PCC typically has a grey appearance with indicative visible-light reflectance of ~40% for smooth surfaces[cite: 3]. Wetting reduces reflectance, while carbonation can whiten it[cite: 3].", img: "https://images.unsplash.com/photo-1524311583145-d5593bd3502a?auto=format&fit=crop&w=1000&q=80" },
+                { id: "Thermal_Mass", group: "Sensory", size: 7, title: "Thermal Mass / Heat Storage", domain: "Sensory & Scientific", meta: "Temperature Perception", desc: "Concrete absorbs, stores, and releases heat over time, meaning a surface may feel cool in shade but warm after heating[cite: 3].", img: "https://images.unsplash.com/photo-1560930777-333e76a1ee5d?auto=format&fit=crop&w=1000&q=80" },
+                { id: "Acoustic_Reflectance", group: "Sensory", size: 5, title: "Acoustic Density", domain: "Sensory Domain", meta: "Sound Insulation", desc: "High material density yields excellent sound insulation and airborne noise reduction, but creates a hard, acoustically reflective surface contributing to reverberation[cite: 3].", img: "https://images.unsplash.com/photo-1587609202029-798c19ee8c4a?auto=format&fit=crop&w=1000&q=80" },
+                { id: "Texture", group: "Sensory", size: 6, title: "Surface Texture", domain: "Sensory Domain", meta: "Tactile Character", desc: "Formwork determines surface texture and leaves marks; texture is a record of how the concrete was formed and finished[cite: 3].", img: "https://images.unsplash.com/photo-1506544923133-7281cff7f12e?auto=format&fit=crop&w=1000&q=80" }
             ],
-            // Links now feature explicit directional verbs to clarify interdependencies
             links: [
-                { source: "Concrete_Matrix", target: "Kiln_Calcination", label: "necessitates" },
-                { source: "Rotary_Kiln", target: "Kiln_Calcination", label: "industrialized" },
-                { source: "Rotary_Kiln", target: "Territorial_Control", label: "enabled mass scale for" },
-                { source: "Kiln_Calcination", target: "Carbon_Economy", label: "chemically generates" },
-                { source: "Concrete_Matrix", target: "Steel_Reinforcement", label: "relies on for tension" },
-                { source: "Steel_Reinforcement", target: "Recycled_Aggregate", label: "contaminates recovery of" },
-                { source: "Concrete_Matrix", target: "Recycled_Aggregate", label: "is demolished into" },
-                { source: "Concrete_Matrix", target: "Sensory_Mass", label: "physically manifests as" },
-                { source: "Territorial_Control", target: "Concrete_Matrix", label: "demanded rapid use of" }
+                { source: "Portland_Cement", target: "Concrete", label: "binds" },
+                { source: "Limestone", target: "Quarrying", label: "extracted via" },
+                { source: "Quarrying", target: "Rotary_Kiln", label: "supplies" },
+                { source: "Rotary_Kiln", target: "Clinker", label: "fires into" },
+                { source: "Clinker", target: "Portland_Cement", label: "ground into" },
+                { source: "Rotary_Kiln", target: "Embodied_Carbon", label: "chemically releases" },
+                { source: "Portland_Cement", target: "Hydration", label: "undergoes" },
+                { source: "Alite", target: "Hydration", label: "drives" },
+                { source: "Belite", target: "Hydration", label: "drives" },
+                { source: "Hydration", target: "Concrete", label: "cures" },
+                { source: "Concrete", target: "Carbonation", label: "ages through" },
+                { source: "Concrete", target: "Tensile_Weakness", label: "exhibits" },
+                { source: "Tensile_Weakness", target: "Steel_Rebar", label: "necessitates" },
+                { source: "Steel_Rebar", target: "Concrete", label: "mechanically interlocks" },
+                { source: "Carbonation", target: "Steel_Rebar", label: "depassivates" },
+                { source: "Precast", target: "Texture", label: "determines" },
+                { source: "Concrete", target: "Precast", label: "cast as" },
+                { source: "SCMs", target: "Portland_Cement", label: "partially replaces" },
+                { source: "SCMs", target: "Embodied_Carbon", label: "mitigates" },
+                { source: "Aspdin_1824", target: "Portland_Cement", label: "invented" },
+                { source: "Aspdin_1824", target: "Rotary_Kiln", label: "predates" },
+                { source: "Rotary_Kiln", target: "Territorial_Control", label: "scaled production for" },
+                { source: "Territorial_Control", target: "Concrete", label: "standardized" },
+                { source: "Welfare_State", target: "Concrete", label: "mass-deployed" },
+                { source: "Welfare_State", target: "Multinational_Oligopoly", label: "privatized into" },
+                { source: "Multinational_Oligopoly", target: "Quarrying", label: "controls" },
+                { source: "Embodied_Carbon", target: "Carbon_Economy", label: "forces" },
+                { source: "Concrete", target: "Demolition_Waste", label: "ends life as" },
+                { source: "Demolition_Waste", target: "RCA", label: "crushed into" },
+                { source: "RCA", target: "Concrete", label: "downcycled into" },
+                { source: "Concrete", target: "Reflectance", label: "manifests as" },
+                { source: "Concrete", target: "Thermal_Mass", label: "manifests as" },
+                { source: "Concrete", target: "Acoustic_Reflectance", label: "manifests as" },
+                { source: "Carbonation", target: "Reflectance", label: "whitens" }
             ]
         };
 
         const width = window.innerWidth;
         const height = window.innerHeight;
 
-        const zoom = d3.zoom().scaleExtent([0.3, 3]).on("zoom", (event) => g.attr("transform", event.transform));
+        const zoom = d3.zoom().scaleExtent([0.15, 4]).on("zoom", (event) => {
+            g.attr("transform", event.transform);
+            // Semantic zoom: reveal link labels only when zoomed in
+            if (event.transform.k > 1.2) {
+                d3.selectAll('.link-label').classed('show-labels', true);
+            } else {
+                d3.selectAll('.link-label').classed('show-labels', false);
+            }
+        });
+        
         const svg = d3.select("#graph-container").append("svg").attr("width", width).attr("height", height).call(zoom);
         const g = svg.append("g");
 
+        // Physics tuned for a broader macro-network
         const simulation = d3.forceSimulation(data.nodes)
-            .force("link", d3.forceLink(data.links).id(d => d.id).distance(280))
-            .force("charge", d3.forceManyBody().strength(-2000))
+            .force("link", d3.forceLink(data.links).id(d => d.id).distance(220))
+            .force("charge", d3.forceManyBody().strength(-1400))
             .force("center", d3.forceCenter(width / 2, height / 2))
-            .force("collide", d3.forceCollide().radius(85));
+            .force("collide", d3.forceCollide().radius(75));
 
-        const link = g.append("g").selectAll("path").data(data.links).join("path").attr("class", "link-line graph-element")
-            .attr("stroke-width", 2);
+        const link = g.append("g").selectAll("path").data(data.links).join("path")
+            .attr("class", "link-line graph-element")
+            .attr("stroke-width", 1.5);
             
-        const linkText = g.append("g").selectAll("text").data(data.links).join("text").attr("class", "link-label graph-element").text(d => d.label);
+        const linkText = g.append("g").selectAll("text").data(data.links).join("text")
+            .attr("class", "link-label graph-element")
+            .text(d => d.label);
 
         const node = g.append("g").selectAll("g").data(data.nodes).join("g").attr("class", "node graph-element")
             .call(d3.drag()
                 .on("start", (e, d) => { if (!e.active) simulation.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; })
                 .on("drag", (e, d) => { d.fx = e.x; d.fy = e.y; })
                 .on("end", (e, d) => { if (!e.active) simulation.alphaTarget(0); d.fx = null; d.fy = null; }))
-            .on("click", handleNodeClick);
+            .on("click", handleNodeClick)
+            .on("mouseover", handleNodeHover)
+            .on("mouseout", handleNodeOut);
 
         node.append("circle")
             .attr("class", "node-circle")
-            .attr("r", d => d.size)
-            .attr("fill", d => d.group === "Core" ? "var(--accent)" : "#0a0a0c")
-            .attr("stroke", d => d.group === "Core" ? "var(--accent)" : "#ffffff")
-            .attr("stroke-width", d => d.group === "Core" ? 0 : 2);
+            .attr("r", d => d.size * 1.5) // Scaled up slightly for broader view
+            .attr("fill", d => getDomainColor(d.group))
+            .attr("stroke", d => getDomainColor(d.group))
+            .attr("stroke-width", d => d.group === "Core" ? 0 : 1.5);
 
-        node.append("text").attr("class", "node-label").attr("dx", 20).attr("dy", 5).text(d => d.title);
+        node.append("text").attr("class", "node-label").attr("dx", d => (d.size * 1.5) + 8).attr("dy", 4).text(d => d.title);
+
+        function getDomainColor(group) {
+            const colors = {
+                "Core": "#c5a059",
+                "Scientific": "#4a90e2",
+                "Technical": "#9b9b9b",
+                "GeoPolitical": "#e74c3c",
+                "Ecological": "#2ecc71",
+                "Sensory": "#9b59b6"
+            };
+            return colors[group] || "#ffffff";
+        }
 
         simulation.on("tick", () => {
             link.attr("d", d => `M${d.source.x},${d.source.y} L${d.target.x},${d.target.y}`);
-            linkText.attr("x", d => (d.source.x + d.target.x) / 2).attr("y", d => (d.source.y + d.target.y) / 2 - 8)
+            linkText.attr("x", d => (d.source.x + d.target.x) / 2).attr("y", d => (d.source.y + d.target.y) / 2 - 6)
                 .attr("transform", d => {
                     const angle = Math.atan2(d.target.y - d.source.y, d.target.x - d.source.x) * 180 / Math.PI;
                     const x = (d.source.x + d.target.x) / 2;
@@ -187,18 +232,42 @@
             node.attr("transform", d => `translate(${d.x},${d.y})`);
         });
 
+        // Interactive highlighting for hover state to parse dense network
+        function handleNodeHover(event, d) {
+            if (document.getElementById('detail-panel').classList.contains('active')) return;
+            const connectedLinks = data.links.filter(l => l.source.id === d.id || l.target.id === d.id);
+            const connectedNodes = [d.id, ...connectedLinks.map(l => l.source.id === d.id ? l.target.id : l.source.id)];
+            
+            d3.selectAll('.graph-element').classed('dimmed', true);
+            node.filter(n => connectedNodes.includes(n.id)).classed('dimmed', false);
+            link.filter(l => connectedLinks.includes(l)).classed('dimmed', false).classed('highlighted-link', true);
+            linkText.filter(l => connectedLinks.includes(l)).classed('dimmed', false).classed('show-labels', true);
+        }
+
+        function handleNodeOut() {
+            if (document.getElementById('detail-panel').classList.contains('active')) return;
+            d3.selectAll('.graph-element').classed('dimmed', false).classed('highlighted-link', false);
+            
+            // Re-hide labels if zoomed out
+            const currentZoom = d3.zoomTransform(svg.node()).k;
+            if (currentZoom <= 1.2) {
+                d3.selectAll('.link-label').classed('show-labels', false);
+            }
+        }
+
         function handleNodeClick(event, d) {
-            svg.transition().duration(900).call(zoom.transform, d3.zoomIdentity.translate(width / 3.5, height / 2).scale(1.1).translate(-d.x, -d.y));
+            svg.transition().duration(1000).call(zoom.transform, d3.zoomIdentity.translate(width / 4, height / 2).scale(1.2).translate(-d.x, -d.y));
 
             const connectedLinks = data.links.filter(l => l.source.id === d.id || l.target.id === d.id);
             const connectedNodes = [d.id, ...connectedLinks.map(l => l.source.id === d.id ? l.target.id : l.source.id)];
 
-            d3.selectAll('.graph-element').classed('dimmed', true).classed('highlighted', false);
+            d3.selectAll('.graph-element').classed('dimmed', true).classed('highlighted', false).classed('highlighted-link', false);
             node.filter(n => connectedNodes.includes(n.id)).classed('dimmed', false).classed('highlighted', true);
-            link.filter(l => connectedLinks.includes(l)).classed('dimmed', false).classed('highlighted', true);
-            linkText.filter(l => connectedLinks.includes(l)).classed('dimmed', false).classed('highlighted', true);
+            link.filter(l => connectedLinks.includes(l)).classed('dimmed', false).classed('highlighted-link', true);
+            linkText.filter(l => connectedLinks.includes(l)).classed('dimmed', false).classed('show-labels', true);
 
             document.getElementById('panel-domain').innerText = d.domain;
+            document.getElementById('panel-domain').style.color = getDomainColor(d.group);
             document.getElementById('panel-title').innerText = d.title;
             document.getElementById('panel-meta').innerText = d.meta;
             document.getElementById('panel-img').src = d.img;
@@ -209,12 +278,12 @@
             connectedLinks.forEach(l => {
                 const isSource = l.source.id === d.id;
                 const relatedNode = isSource ? l.target : l.source;
-                // Clearly format the cause-and-effect relationship for the panel
                 const relationVerb = l.label;
                 
+                // Allow clicking related nodes in the panel to jump to them
                 listEl.innerHTML += `
-                <div class="interdependency-card">
-                    <span class="relation-tag">${isSource ? 'This Node' : relatedNode.title} ${relationVerb}</span>
+                <div class="interdependency-card" onclick="document.dispatchEvent(new CustomEvent('jumpToNode', {detail: '${relatedNode.id}'}))">
+                    <span class="relation-tag" style="color:${getDomainColor(relatedNode.group)}">${isSource ? 'This Node' : relatedNode.title} ${relationVerb}</span>
                     <div class="relation-target">${isSource ? relatedNode.title : 'This Node'}</div>
                 </div>`;
             });
@@ -222,11 +291,22 @@
             document.getElementById('detail-panel').classList.add('active');
         }
 
+        // Custom event to handle jumping from sidebar link to another node
+        document.addEventListener('jumpToNode', function(e) {
+            const targetNode = data.nodes.find(n => n.id === e.detail);
+            if(targetNode) handleNodeClick(null, targetNode);
+        });
+
         function resetGraph() {
             document.getElementById('detail-panel').classList.remove('active');
-            d3.selectAll('.graph-element').classed('dimmed', false).classed('highlighted', false);
-            svg.transition().duration(900).call(zoom.transform, d3.zoomIdentity.translate(width / 2, height / 2).scale(0.85).translate(-width/2, -height/2));
+            d3.selectAll('.graph-element').classed('dimmed', false).classed('highlighted', false).classed('highlighted-link', false);
+            svg.transition().duration(1000).call(zoom.transform, d3.zoomIdentity.translate(width / 2, height / 2).scale(0.6).translate(-width/2, -height/2));
+            
+            d3.selectAll('.link-label').classed('show-labels', false);
         }
+        
+        // Initial Zoom Out to see the macro structure
+        svg.call(zoom.transform, d3.zoomIdentity.translate(width / 2, height / 2).scale(0.55).translate(-width/2, -height/2));
     </script>
 </body>
 </html>
