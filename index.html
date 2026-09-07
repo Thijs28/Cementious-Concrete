@@ -8,30 +8,30 @@
     <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-color: #0d0d12;
-            --text-primary: #f0f0f0;
-            --text-muted: #8a8a8a;
-            --panel-bg: rgba(15, 15, 20, 0.95);
+            --bg-color: #0b0c10;
+            --text-primary: #e0e6ed;
+            --text-muted: #8b929a;
+            --panel-bg: rgba(11, 12, 16, 0.96);
         }
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: var(--bg-color); color: var(--text-primary); font-family: 'Inter', sans-serif; overflow: hidden; }
         
         #graph-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
         .node-circle { transition: stroke 0.3s, r 0.3s; cursor: pointer; }
         .node-circle:hover { stroke: #ffffff !important; stroke-width: 2.5px !important; }
-        .node-label { font-family: 'EB Garamond', serif; font-size: 13px; fill: var(--text-primary); pointer-events: none; text-shadow: 0 4px 12px rgba(0,0,0,1); transition: opacity 0.3s; }
-        .link-line { stroke: #3a3a45; stroke-opacity: 0.6; fill: none; transition: stroke-opacity 0.3s, stroke 0.3s; }
-        .link-label { font-family: 'Inter', sans-serif; font-size: 8px; fill: #999999; text-transform: uppercase; letter-spacing: 1px; pointer-events: none; text-anchor: middle; font-weight: 600; text-shadow: 0 2px 4px rgba(0,0,0,0.9); opacity: 0; transition: opacity 0.3s; }
+        .node-label { font-family: 'EB Garamond', serif; font-size: 14px; fill: var(--text-primary); pointer-events: none; text-shadow: 0 4px 12px rgba(0,0,0,1); transition: opacity 0.3s; }
+        .link-line { stroke: #2a2d34; stroke-opacity: 0.6; fill: none; transition: stroke-opacity 0.3s, stroke 0.3s; }
+        .link-label { font-family: 'Inter', sans-serif; font-size: 9px; fill: #7a8288; text-transform: uppercase; letter-spacing: 1.5px; pointer-events: none; text-anchor: middle; font-weight: 600; text-shadow: 0 2px 4px rgba(0,0,0,0.9); opacity: 0; transition: opacity 0.3s; }
         
         .show-labels { opacity: 1 !important; }
-        .dimmed { opacity: 0.05 !important; transition: opacity 0.4s ease; filter: grayscale(100%); }
+        .dimmed { opacity: 0.04 !important; transition: opacity 0.4s ease; filter: grayscale(100%); }
         .highlighted { opacity: 1 !important; transition: opacity 0.4s ease; }
-        .highlighted-link { stroke: #888 !important; stroke-opacity: 0.8 !important; stroke-width: 1.5px !important; }
+        .highlighted-link { stroke: #666 !important; stroke-opacity: 0.9 !important; stroke-width: 1.5px !important; }
         
         #detail-panel {
             position: absolute; top: 0; right: -750px; width: 600px; height: 100%;
-            background: var(--panel-bg); backdrop-filter: blur(25px); border-left: 1px solid #222;
-            padding: 50px; box-sizing: border-box; transition: right 0.7s cubic-bezier(0.19, 1, 0.22, 1);
-            overflow-y: auto; z-index: 100; box-shadow: -10px 0 30px rgba(0,0,0,0.8);
+            background: var(--panel-bg); backdrop-filter: blur(20px); border-left: 1px solid #1f2229;
+            padding: 50px 45px; box-sizing: border-box; transition: right 0.7s cubic-bezier(0.19, 1, 0.22, 1);
+            overflow-y: auto; z-index: 100; box-shadow: -15px 0 40px rgba(0,0,0,0.9);
         }
         #detail-panel.active { right: 0; }
         
@@ -41,23 +41,23 @@
         .domain-tag-container { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
         .domain-tag { padding: 6px 14px; border: 1px solid #333; border-radius: 20px; font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.8); }
         h1 { font-family: 'EB Garamond', serif; font-size: 2.8rem; font-weight: 400; margin: 0 0 15px 0; line-height: 1.1; }
-        .meta-data { font-size: 0.85rem; color: var(--text-muted); border-bottom: 1px solid #2a2a2a; padding-bottom: 20px; margin-bottom: 30px; line-height: 1.5; text-transform: uppercase; letter-spacing: 1px;}
+        .meta-data { font-size: 0.85rem; color: var(--text-muted); border-bottom: 1px solid #1f2229; padding-bottom: 20px; margin-bottom: 30px; line-height: 1.5; text-transform: uppercase; letter-spacing: 1px;}
         
-        .media-container { width: 100%; aspect-ratio: 16/9; background: #000; margin-bottom: 30px; border-radius: 6px; overflow: hidden; position: relative; border: 1px solid #333; }
-        .media-container img { width: 100%; height: 100%; object-fit: cover; opacity: 0.8; transition: opacity 0.3s; }
+        .media-container { width: 100%; aspect-ratio: 16/9; background: #000; margin-bottom: 30px; border-radius: 6px; overflow: hidden; position: relative; border: 1px solid #1f2229; }
+        .media-container img { width: 100%; height: 100%; object-fit: cover; opacity: 0.85; transition: opacity 0.3s; }
         .media-container img:hover { opacity: 1; }
         
-        .content-body { font-size: 1.05rem; line-height: 1.7; font-weight: 300; color: #d0d0d0; }
+        .content-body { font-size: 1.05rem; line-height: 1.7; font-weight: 300; color: #c4c9d0; }
         
-        .interdependency-list { margin-top: 40px; padding-top: 25px; border-top: 1px solid #2a2a2a; }
-        .interdependency-list h3 { font-family: 'EB Garamond', serif; font-size: 1.6rem; font-weight: 400; margin-bottom: 10px; color: var(--text-primary); }
+        .interdependency-list { margin-top: 40px; padding-top: 25px; border-top: 1px solid #1f2229; }
+        .interdependency-list h3 { font-family: 'EB Garamond', serif; font-size: 1.6rem; font-weight: 400; margin-bottom: 15px; color: var(--text-primary); }
         
-        .category-header { font-family: 'Inter', sans-serif; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1.5px; color: #888; border-bottom: 1px solid #333; padding-bottom: 5px; margin: 25px 0 10px 0; }
-        .interdependency-card { background: rgba(255,255,255,0.03); border: 1px solid #222; padding: 15px; border-radius: 6px; margin-bottom: 10px; transition: background 0.2s, border-color 0.2s; cursor: pointer; }
-        .interdependency-card:hover { background: rgba(255,255,255,0.06); border-color: #444; }
-        .relation-tag { font-size: 0.75rem; color: #aaa; text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 5px; }
-        .relation-target { font-weight: 600; color: #fff; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; }
-        .target-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+        .category-header { font-family: 'Inter', sans-serif; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1.5px; color: #6a737d; border-bottom: 1px solid #1f2229; padding-bottom: 5px; margin: 25px 0 15px 0; }
+        .interdependency-card { background: rgba(255,255,255,0.02); border: 1px solid #1f2229; padding: 16px; border-radius: 6px; margin-bottom: 12px; transition: background 0.2s, border-color 0.2s; cursor: pointer; }
+        .interdependency-card:hover { background: rgba(255,255,255,0.05); border-color: #3b4048; }
+        .relation-tag { font-size: 0.75rem; color: #8b929a; text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 6px; }
+        .relation-target { font-weight: 600; color: #fff; font-size: 1.1rem; display: flex; align-items: center; gap: 10px; }
+        .target-dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; box-shadow: 0 0 5px rgba(0,0,0,0.5); }
     </style>
 </head>
 <body>
@@ -83,14 +83,15 @@
     </div>
 
     <script>
+        // Refined Master's-level architectural color palette
         const domainColors = {
-            "Core": "#F4D03F",
-            "Scientific": "#3498DB",
-            "Technical": "#E67E22",
-            "Historical": "#95A5A6",
-            "GeoPolitical": "#E74C3C",
-            "Ecological": "#2ECC71",
-            "Sensory": "#9B59B6"
+            "Core": "#D4AF37",         // Metallic Gold
+            "Scientific": "#5D8AA8",   // Air Force Blue
+            "Technical": "#CD7F32",    // Bronze
+            "Historical": "#8B9A9A",   // Slate Gray
+            "GeoPolitical": "#B24C4C", // Muted Crimson
+            "Ecological": "#4A7A59",   // Sage/Moss Green
+            "Sensory": "#7A5C7A"       // Muted Plum
         };
 
         const data = {
@@ -122,6 +123,7 @@
                 { id: "Acoustic_Reflectance", domains: ["Sensory"], title: "Acoustic Density", meta: "Sound Insulation", desc: "High material density yields excellent sound insulation and airborne noise reduction, but creates a hard, acoustically reflective surface contributing to reverberation[cite: 3].", img: "https://images.unsplash.com/photo-1587609202029-798c19ee8c4a?auto=format&fit=crop&w=1000&q=80" },
                 { id: "Texture", domains: ["Sensory"], title: "Surface Texture", meta: "Tactile Character", desc: "Formwork determines surface texture and leaves marks; texture is a record of how the concrete was formed and finished[cite: 3].", img: "https://images.unsplash.com/photo-1506544923133-7281cff7f12e?auto=format&fit=crop&w=1000&q=80" }
             ],
+            // Categories consolidated to 4 overarching definitions for clarity
             links: [
                 { source: "Portland_Cement", target: "Concrete", label: "binds", category: "Systemic Structure" },
                 { source: "Limestone", target: "Quarrying", label: "extracted via", category: "Transformation" },
@@ -142,12 +144,12 @@
                 { source: "Concrete", target: "Precast", label: "cast as", category: "Systemic Structure" },
                 { source: "SCMs", target: "Portland_Cement", label: "partially replaces", category: "Dependency" },
                 { source: "SCMs", target: "Embodied_Carbon", label: "mitigates", category: "Impact" },
-                { source: "Aspdin_1824", target: "Portland_Cement", label: "invented", category: "Historical Context" },
-                { source: "Aspdin_1824", target: "Rotary_Kiln", label: "predates", category: "Historical Context" },
-                { source: "Rotary_Kiln", target: "Territorial_Control", label: "scaled production for", category: "Historical Context" },
-                { source: "Territorial_Control", target: "Concrete", label: "standardized", category: "Historical Context" },
-                { source: "Welfare_State", target: "Concrete", label: "mass-deployed", category: "Historical Context" },
-                { source: "Welfare_State", target: "Multinational_Oligopoly", label: "privatized into", category: "Historical Context" },
+                { source: "Aspdin_1824", target: "Portland_Cement", label: "invented", category: "Systemic Structure" },
+                { source: "Aspdin_1824", target: "Rotary_Kiln", label: "predates", category: "Systemic Structure" },
+                { source: "Rotary_Kiln", target: "Territorial_Control", label: "scaled production for", category: "Dependency" },
+                { source: "Territorial_Control", target: "Concrete", label: "standardized", category: "Transformation" },
+                { source: "Welfare_State", target: "Concrete", label: "mass-deployed", category: "Impact" },
+                { source: "Welfare_State", target: "Multinational_Oligopoly", label: "privatized into", category: "Transformation" },
                 { source: "Multinational_Oligopoly", target: "Quarrying", label: "controls", category: "Dependency" },
                 { source: "Embodied_Carbon", target: "Carbon_Economy", label: "forces", category: "Impact" },
                 { source: "Concrete", target: "Demolition_Waste", label: "ends life as", category: "Systemic Structure" },
@@ -176,6 +178,7 @@
         const g = svg.append("g");
         const defs = svg.append("defs");
 
+        // Calculate node size based on connections
         const degreeMap = {};
         data.links.forEach(l => {
             degreeMap[l.source] = (degreeMap[l.source] || 0) + 1;
@@ -185,9 +188,10 @@
         const generatedGrads = new Set();
 
         data.nodes.forEach(n => {
-            const deg = degreeMap[n.id] || 1;
-            n.size = 5 + (deg * 1.5);
+            const deg = degreeMap[n.id] || 0;
+            n.size = 8 + (deg * 2.5); // Base size 8, dynamically scales up with connections
 
+            // Handle multi-domain gradients
             if (n.domains.length > 1) {
                 const gradId = "grad-" + n.domains.join("-").replace(/\s/g, '');
                 n.fill = `url(#${gradId})`;
@@ -197,7 +201,9 @@
                     generatedGrads.add(gradId);
                     const grad = defs.append("linearGradient").attr("id", gradId).attr("x1", "0%").attr("y1", "0%").attr("x2", "100%").attr("y2", "100%");
                     n.domains.forEach((d, i) => {
-                        grad.append("stop").attr("offset", `${(i / (n.domains.length - 1)) * 100}%`).attr("stop-color", domainColors[d] || "#fff");
+                        grad.append("stop")
+                            .attr("offset", `${(i / (n.domains.length - 1)) * 100}%`)
+                            .attr("stop-color", domainColors[d] || "#fff");
                     });
                 }
             } else {
@@ -208,9 +214,9 @@
 
         const simulation = d3.forceSimulation(data.nodes)
             .force("link", d3.forceLink(data.links).id(d => d.id).distance(220))
-            .force("charge", d3.forceManyBody().strength(-1500))
+            .force("charge", d3.forceManyBody().strength(-1800))
             .force("center", d3.forceCenter(width / 2, height / 2))
-            .force("collide", d3.forceCollide().radius(d => d.size * 2 + 10));
+            .force("collide", d3.forceCollide().radius(d => d.size * 1.5 + 20));
 
         const link = g.append("g").selectAll("path").data(data.links).join("path")
             .attr("class", "link-line graph-element")
@@ -231,12 +237,12 @@
 
         node.append("circle")
             .attr("class", "node-circle")
-            .attr("r", d => d.size * 1.5)
+            .attr("r", d => d.size)
             .attr("fill", d => d.fill)
             .attr("stroke", d => d.fill.includes("url") ? "#ffffff" : d.fill)
             .attr("stroke-width", d => d.domains.includes("Core") ? 0 : 1.5);
 
-        node.append("text").attr("class", "node-label").attr("dx", d => (d.size * 1.5) + 8).attr("dy", 4).text(d => d.title);
+        node.append("text").attr("class", "node-label").attr("dx", d => d.size + 12).attr("dy", 5).text(d => d.title);
 
         simulation.on("tick", () => {
             link.attr("d", d => `M${d.source.x},${d.source.y} L${d.target.x},${d.target.y}`);
@@ -249,10 +255,6 @@
                 });
             node.attr("transform", d => `translate(${d.x},${d.y})`);
         });
-
-        function formatDisplayString(text) {
-            return text.replace(/\/g, '');
-        }
 
         function handleNodeHover(event, d) {
             if (document.getElementById('detail-panel').classList.contains('active')) return;
@@ -295,7 +297,10 @@
             document.getElementById('panel-title').innerText = d.title;
             document.getElementById('panel-meta').innerText = d.meta;
             document.getElementById('panel-img').src = d.img;
-            document.getElementById('panel-desc').innerHTML = formatDisplayString(d.desc);
+            
+            // Clean citations dynamically for the UI display to satisfy both prompt requirements
+            const displayDesc = d.desc.replace(/\/g, '');
+            document.getElementById('panel-desc').innerHTML = displayDesc;
 
             const listEl = document.getElementById('panel-links');
             listEl.innerHTML = "";
