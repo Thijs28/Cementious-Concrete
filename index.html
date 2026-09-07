@@ -10,47 +10,47 @@
         :root {
             --bg-color: #0d0d0f;
             --text-primary: #f5f5f5;
-            --text-muted: #666666;
+            --text-muted: #888888;
             --accent: #d4af37;
-            --panel-bg: rgba(13, 13, 15, 0.85);
+            --panel-bg: rgba(15, 15, 18, 0.92);
         }
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: var(--bg-color); color: var(--text-primary); font-family: 'Inter', sans-serif; overflow: hidden; }
         
-        /* Typography & Canvas */
         #graph-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
         .node-circle { transition: fill 0.3s, stroke 0.3s; cursor: pointer; }
-        .node-label { font-family: 'EB Garamond', serif; font-size: 16px; fill: var(--text-primary); pointer-events: none; text-shadow: 0 4px 8px rgba(0,0,0,0.9); }
-        .link-line { stroke: #333333; stroke-opacity: 0.6; fill: none; }
-        .link-label { font-family: 'Inter', sans-serif; font-size: 9px; fill: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; pointer-events: none; text-anchor: middle; }
+        .node-label { font-family: 'EB Garamond', serif; font-size: 15px; fill: var(--text-primary); pointer-events: none; text-shadow: 0 4px 8px rgba(0,0,0,0.9); }
+        .link-line { stroke: #333333; stroke-opacity: 0.8; fill: none; }
+        .link-label { font-family: 'Inter', sans-serif; font-size: 9px; fill: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; pointer-events: none; text-anchor: middle; }
         
-        /* State Classes */
-        .dimmed { opacity: 0.1 !important; transition: opacity 0.5s ease; }
-        .highlighted { opacity: 1 !important; transition: opacity 0.5s ease; }
+        .dimmed { opacity: 0.05 !important; transition: opacity 0.4s ease; }
+        .highlighted { opacity: 1 !important; transition: opacity 0.4s ease; }
         
-        /* Presentation Panel */
         #detail-panel {
-            position: absolute; top: 0; right: -600px; width: 500px; height: 100%;
-            background: var(--panel-bg); backdrop-filter: blur(12px); border-left: 1px solid #222;
-            padding: 50px 40px; box-sizing: border-box; transition: right 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            position: absolute; top: 0; right: -650px; width: 550px; height: 100%;
+            background: var(--panel-bg); backdrop-filter: blur(15px); border-left: 1px solid #2a2a2a;
+            padding: 50px 45px; box-sizing: border-box; transition: right 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
             overflow-y: auto; z-index: 100;
         }
         #detail-panel.active { right: 0; }
         
-        .close-btn { position: absolute; top: 30px; right: 40px; background: none; border: none; color: var(--text-muted); font-size: 24px; cursor: pointer; transition: color 0.2s; }
+        .close-btn { position: absolute; top: 30px; right: 40px; background: none; border: none; color: var(--text-muted); font-size: 28px; cursor: pointer; transition: color 0.2s; }
         .close-btn:hover { color: var(--text-primary); }
         
-        .domain-tag { display: inline-block; padding: 4px 10px; border: 1px solid #444; border-radius: 20px; font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--accent); margin-bottom: 20px; }
-        h1 { font-family: 'EB Garamond', serif; font-size: 2.8rem; font-weight: 400; margin: 0 0 20px 0; line-height: 1.1; }
-        .meta-data { font-size: 0.85rem; color: var(--text-muted); border-bottom: 1px solid #333; padding-bottom: 20px; margin-bottom: 30px; }
+        .domain-tag { display: inline-block; padding: 5px 12px; border: 1px solid #444; border-radius: 20px; font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--accent); margin-bottom: 20px; }
+        h1 { font-family: 'EB Garamond', serif; font-size: 2.6rem; font-weight: 400; margin: 0 0 15px 0; line-height: 1.1; }
+        .meta-data { font-size: 0.85rem; color: var(--text-muted); border-bottom: 1px solid #333; padding-bottom: 20px; margin-bottom: 30px; line-height: 1.5; }
         
-        .media-container { width: 100%; aspect-ratio: 16/9; background: #1a1a1a; margin-bottom: 30px; border-radius: 4px; overflow: hidden; position: relative; }
-        .media-container img { width: 100%; height: 100%; object-fit: cover; opacity: 0.8; transition: opacity 0.3s; }
+        .media-container { width: 100%; aspect-ratio: 16/9; background: #111; margin-bottom: 30px; border-radius: 6px; overflow: hidden; position: relative; border: 1px solid #222; }
+        .media-container img { width: 100%; height: 100%; object-fit: cover; opacity: 0.7; transition: opacity 0.3s; }
         .media-container img:hover { opacity: 1; }
         
-        .content-body { font-size: 1.1rem; line-height: 1.7; font-weight: 300; color: #cccccc; }
-        .interdependency-list { margin-top: 40px; padding-top: 20px; border-top: 1px solid #333; }
-        .interdependency-list h3 { font-family: 'EB Garamond', serif; font-size: 1.4rem; font-weight: 400; margin-bottom: 15px; color: var(--text-primary); }
-        .interdependency-list ul { padding-left: 20px; font-size: 0.95rem; line-height: 1.6; color: #aaa; }
+        .content-body { font-size: 1.05rem; line-height: 1.7; font-weight: 300; color: #d0d0d0; }
+        .content-body strong { color: #ffffff; font-weight: 600; }
+        
+        .interdependency-list { margin-top: 40px; padding-top: 25px; border-top: 1px solid #333; }
+        .interdependency-list h3 { font-family: 'EB Garamond', serif; font-size: 1.5rem; font-weight: 400; margin-bottom: 20px; color: var(--text-primary); }
+        .interdependency-list ul { padding-left: 20px; font-size: 0.95rem; line-height: 1.6; color: #a0a0a0; }
+        .interdependency-list li { margin-bottom: 10px; }
     </style>
 </head>
 <body>
@@ -61,85 +61,109 @@
         <button class="close-btn" onclick="resetGraph()">×</button>
         <div class="domain-tag" id="panel-domain">Domain</div>
         <h1 id="panel-title">Node Title</h1>
-        <div class="meta-data" id="panel-meta">Semantic Node / Material Architecture</div>
+        <div class="meta-data" id="panel-meta"></div>
         
         <div class="media-container">
             <img id="panel-img" src="" alt="Data Visualization">
         </div>
         
-        <div class="content-body" id="panel-desc">
-            Detailed critical reflection mapping the material's properties, processes, and relationships across its trajectory.
-        </div>
+        <div class="content-body" id="panel-desc"></div>
         
         <div class="interdependency-list">
-            <h3>Direct Interdependencies</h3>
+            <h3>System Interdependencies</h3>
             <ul id="panel-links"></ul>
         </div>
     </div>
 
     <script>
-        // Graph Ontology Data mapping the 6 domains
         const data = {
             nodes: [
-                { id: "Concrete", group: "Core", size: 8, title: "Cementitious Concrete", domain: "Multi-Domain", desc: "The foundational material profile. A composite material consisting of a binder (cement) mixed with water and aggregate.", img: "https://images.unsplash.com/photo-1518002171953-a080ee817e1f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" },
-                
-                { id: "Calcination", group: "Technical", size: 5, title: "Kiln Calcination", domain: "Technical Domain", desc: "Forming method requiring kilns to reach 1450°C to transform raw materials into clinker[cite: 1]. High energy consumption dictates manufacturing locations.", img: "https://images.unsplash.com/photo-1504257121735-02ebcb710034?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" },
-                { id: "Embodied_Carbon", group: "Ecological", size: 5, title: "Embodied Carbon Emissions", domain: "Ecological Domain", desc: "The environmental footprint generated during extraction and manufacturing stages[cite: 1]. Accounts for roughly 8% of global CO2 emissions.", img: "https://images.unsplash.com/photo-1611273426858-450d8e3c9cce?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" },
-                
-                { id: "Thermal_Mass", group: "Scientific", size: 5, title: "Thermal Mass Capacity", domain: "Scientific Domain", desc: "Key thermal property denoting the ability of concrete to absorb, store, and release heat energy over time[cite: 1].", img: "https://images.unsplash.com/photo-1560930777-333e76a1ee5d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" },
-                { id: "Urban_Heat", group: "Ecological", size: 4, title: "Urban Heat Island Effect", domain: "Ecological Domain", desc: "Phenomenon where dense concrete urban areas experience significantly higher temperatures due to heat retention.", img: "https://images.unsplash.com/photo-1480796927426-f609979314bd?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" },
-                
-                { id: "Brutalism", group: "Sensory", size: 4, title: "Brutalist Aesthetics", domain: "Sensory Domain", desc: "Exploitation of the material's unique sensory qualities, specifically its raw texture and monolithic form[cite: 1].", img: "https://images.unsplash.com/photo-1524311583145-d5593bd3502a?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" },
-                { id: "Monopoly", group: "GeoPolitical", size: 4, title: "Regional Supply Monopolies", domain: "Geo-political Domain", desc: "Cartels and monopolies controlling extraction sites due to the high logistical cost of transporting heavy raw materials[cite: 1].", img: "https://images.unsplash.com/photo-1586528116311-ad8ed745eb33?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" },
-                
-                { id: "Patent_1824", group: "Historical", size: 4, title: "Joseph Aspdin's Patent", domain: "Historical Domain", desc: "Key historical milestone in 1824 that industrialized Portland cement production and standardized material behavior[cite: 1].", img: "https://images.unsplash.com/photo-1590059345229-37f26fc198ce?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" }
+                { 
+                    id: "Composite_Matrix", group: "Core", size: 10, title: "Cementitious Concrete", domain: "Multi-Domain", 
+                    meta: "The foundational material system[cite: 1].", 
+                    desc: "A composite material consisting of a binder (cement) mixed with water and aggregate. Its phase transformations dictate its cross-domain interdependencies[cite: 1].", 
+                    img: "https://images.unsplash.com/photo-1518002171953-a080ee817e1f?auto=format&fit=crop&w=1000&q=80" 
+                },
+                { 
+                    id: "Phase1_Calcination", group: "Technical", size: 7, title: "Kiln Calcination", domain: "Technical Domain", 
+                    meta: "Phase 1: Cement Manufacturing (1450°C)[cite: 2]", 
+                    desc: "At 600°C to 900°C, the calcination process (CaCO₃ → CaO + CO₂) accounts for about 80% of volume and roughly 60% of CO₂ emissions[cite: 2]. Dicalcium and Tricalcium Silicates form between 1200°C and 1450°C[cite: 2].", 
+                    img: "https://images.unsplash.com/photo-1504257121735-02ebcb710034?auto=format&fit=crop&w=1000&q=80" 
+                },
+                { 
+                    id: "Geopolitical_Flux", group: "GeoPolitical", size: 5, title: "Flux Trade Routes", domain: "Geo-political & Economic", 
+                    meta: "Global Supply Chain Dynamics[cite: 1]", 
+                    desc: "Aluminium (Al₂O₃) and Iron (Fe₂O₃) are critical to lower the temperature needed for the chemical process (silicate reaction)[cite: 2]. Securing these fluxes creates dependency on global iron and bauxite extraction[cite: 1].", 
+                    img: "https://images.unsplash.com/photo-1586528116311-ad8ed745eb33?auto=format&fit=crop&w=1000&q=80" 
+                },
+                { 
+                    id: "Phase2_Hydration", group: "Scientific", size: 7, title: "Hydration Curing", domain: "Scientific Domain", 
+                    meta: "Phase 2: Concrete Curing[cite: 2]", 
+                    desc: "Alite (C₃S) and Belite (C₂S) hydration generate primary structural bonds (e.g., 2(3CaO·SiO₂) + 11H₂O → 3CaO·2SiO₂·8H₂O + 3Ca(OH)₂)[cite: 2]. This exothermic reaction transforms the slurry into a rigid matrix.", 
+                    img: "https://images.unsplash.com/photo-1590059345229-37f26fc198ce?auto=format&fit=crop&w=1000&q=80" 
+                },
+                { 
+                    id: "Phase3_Carbonation", group: "Ecological", size: 6, title: "Environmental Aging", domain: "Ecological Domain", 
+                    meta: "Phase 3: Carbonation[cite: 2]", 
+                    desc: "Through carbonation (Ca(OH)₂ + CO₂ → CaCO₃ + H₂O), the material slowly acts as a carbon sink[cite: 2]. However, this lowers the internal pH, creating vulnerability to long-term chloride-induced depassivation of embedded steel[cite: 2].", 
+                    img: "https://images.unsplash.com/photo-1611273426858-450d8e3c9cce?auto=format&fit=crop&w=1000&q=80" 
+                },
+                { 
+                    id: "Tensile_Weakness", group: "Scientific", size: 6, title: "Tensile Brittleness", domain: "Scientific Domain", 
+                    meta: "Mechanical & Structural Performance[cite: 2]", 
+                    desc: "While providing high compressive strength (20–50 MPa), concrete exhibits low tensile strength (approximately 10% of compressive capacity)[cite: 2]. It is highly brittle and prone to cracking under tension, leading to structural failure[cite: 2].", 
+                    img: "https://images.unsplash.com/photo-1517424177579-242550186104?auto=format&fit=crop&w=1000&q=80" 
+                },
+                { 
+                    id: "Strain_Compatibility", group: "Scientific", size: 5, title: "Strain Compatibility", domain: "Scientific Domain", 
+                    meta: "Thermodynamic Synergy[cite: 2]", 
+                    desc: "Because concrete and steel have nearly identical coefficients of thermal expansion, they bond together as a single structural unit[cite: 2]. Both materials deform together under load[cite: 2].", 
+                    img: "https://images.unsplash.com/photo-1560930777-333e76a1ee5d?auto=format&fit=crop&w=1000&q=80" 
+                },
+                { 
+                    id: "Steel_Reinforcement", group: "Technical", size: 7, title: "Rebar Integration", domain: "Technical Domain", 
+                    meta: "Structural Composites[cite: 2]", 
+                    desc: "Hardening around the steel's ribs creates strong mechanical interlock[cite: 2]. The steel acts as the bridge carrying the tensile force across micro-cracks, taking over the load while concrete acts as the compression carrier[cite: 2].", 
+                    img: "https://images.unsplash.com/photo-1533727763132-75ebff00c3b8?auto=format&fit=crop&w=1000&q=80" 
+                },
+                { 
+                    id: "Acoustic_Mass", group: "Sensory", size: 5, title: "Acoustic Density", domain: "Sensory Domain", 
+                    meta: "Experiential Acoustics[cite: 2]", 
+                    desc: "The high material density yields excellent sound insulation and airborne noise reduction[cite: 2]. This sensory property is quantitatively measured by determining sound transmission loss (STC ratings)[cite: 2].", 
+                    img: "https://images.unsplash.com/photo-1524311583145-d5593bd3502a?auto=format&fit=crop&w=1000&q=80" 
+                }
             ],
             links: [
-                { source: "Concrete", target: "Calcination", label: "requires" },
-                { source: "Calcination", target: "Embodied_Carbon", label: "generates" },
-                { source: "Concrete", target: "Thermal_Mass", label: "exhibits" },
-                { source: "Thermal_Mass", target: "Urban_Heat", label: "exacerbates" },
-                { source: "Concrete", target: "Brutalism", label: "enables" },
-                { source: "Calcination", target: "Monopoly", label: "drives" },
-                { source: "Patent_1824", target: "Calcination", label: "standardized" }
+                { source: "Composite_Matrix", target: "Phase1_Calcination", label: "requires" },
+                { source: "Geopolitical_Flux", target: "Phase1_Calcination", label: "lowers kiln temp" },
+                { source: "Composite_Matrix", target: "Phase2_Hydration", label: "cures via" },
+                { source: "Phase2_Hydration", target: "Phase3_Carbonation", label: "ages into" },
+                { source: "Phase3_Carbonation", target: "Steel_Reinforcement", label: "depassivates" },
+                { source: "Composite_Matrix", target: "Tensile_Weakness", label: "exhibits" },
+                { source: "Steel_Reinforcement", target: "Tensile_Weakness", label: "resolves" },
+                { source: "Strain_Compatibility", target: "Steel_Reinforcement", label: "enables" },
+                { source: "Phase2_Hydration", target: "Steel_Reinforcement", label: "mechanically interlocks" },
+                { source: "Composite_Matrix", target: "Acoustic_Mass", label: "provides" }
             ]
         };
 
         const width = window.innerWidth;
         const height = window.innerHeight;
 
-        const zoom = d3.zoom().scaleExtent([0.3, 3]).on("zoom", (event) => g.attr("transform", event.transform));
+        const zoom = d3.zoom().scaleExtent([0.4, 4]).on("zoom", (event) => g.attr("transform", event.transform));
         const svg = d3.select("#graph-container").append("svg").attr("width", width).attr("height", height).call(zoom);
         const g = svg.append("g");
 
-        // Force Simulation setup
         const simulation = d3.forceSimulation(data.nodes)
-            .force("link", d3.forceLink(data.links).id(d => d.id).distance(200))
-            .force("charge", d3.forceManyBody().strength(-1200))
+            .force("link", d3.forceLink(data.links).id(d => d.id).distance(240))
+            .force("charge", d3.forceManyBody().strength(-1500))
             .force("center", d3.forceCenter(width / 2, height / 2))
-            .force("collide", d3.forceCollide().radius(60));
+            .force("collide", d3.forceCollide().radius(70));
 
-        // Draw Links
-        const link = g.append("g")
-            .selectAll("path")
-            .data(data.links)
-            .join("path")
-            .attr("class", "link-line graph-element");
+        const link = g.append("g").selectAll("path").data(data.links).join("path").attr("class", "link-line graph-element");
+        const linkText = g.append("g").selectAll("text").data(data.links).join("text").attr("class", "link-label graph-element").text(d => d.label);
 
-        // Draw Link Labels (Semantic Relationships)
-        const linkText = g.append("g")
-            .selectAll("text")
-            .data(data.links)
-            .join("text")
-            .attr("class", "link-label graph-element")
-            .text(d => d.label);
-
-        // Draw Nodes
-        const node = g.append("g")
-            .selectAll("g")
-            .data(data.nodes)
-            .join("g")
-            .attr("class", "node graph-element")
+        const node = g.append("g").selectAll("g").data(data.nodes).join("g").attr("class", "node graph-element")
             .call(d3.drag()
                 .on("start", (e, d) => { if (!e.active) simulation.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; })
                 .on("drag", (e, d) => { d.fx = e.x; d.fy = e.y; })
@@ -153,63 +177,43 @@
             .attr("stroke", d => d.group === "Core" ? "var(--accent)" : "#ffffff")
             .attr("stroke-width", d => d.group === "Core" ? 0 : 2);
 
-        node.append("text")
-            .attr("class", "node-label")
-            .attr("dx", 15)
-            .attr("dy", 5)
-            .text(d => d.id);
+        node.append("text").attr("class", "node-label").attr("dx", 18).attr("dy", 5).text(d => d.id.replace("_", " "));
 
-        // Simulation Tick Update
         simulation.on("tick", () => {
             link.attr("d", d => `M${d.source.x},${d.source.y} L${d.target.x},${d.target.y}`);
-            
-            linkText
-                .attr("x", d => (d.source.x + d.target.x) / 2)
-                .attr("y", d => (d.source.y + d.target.y) / 2 - 5)
-                // Auto-rotate text to align with line
+            linkText.attr("x", d => (d.source.x + d.target.x) / 2).attr("y", d => (d.source.y + d.target.y) / 2 - 8)
                 .attr("transform", d => {
                     const angle = Math.atan2(d.target.y - d.source.y, d.target.x - d.source.x) * 180 / Math.PI;
                     const x = (d.source.x + d.target.x) / 2;
                     const y = (d.source.y + d.target.y) / 2;
                     return `rotate(${angle > 90 || angle < -90 ? angle + 180 : angle}, ${x}, ${y})`;
                 });
-
             node.attr("transform", d => `translate(${d.x},${d.y})`);
         });
 
-        // Interactions
         function handleNodeClick(event, d) {
-            // Re-center network on clicked node smoothly
-            const scale = 1.2;
-            svg.transition().duration(750).call(
-                zoom.transform, 
-                d3.zoomIdentity.translate(width / 3, height / 2).scale(scale).translate(-d.x, -d.y)
-            );
+            svg.transition().duration(800).call(zoom.transform, d3.zoomIdentity.translate(width / 3, height / 2).scale(1.3).translate(-d.x, -d.y));
 
-            // Determine connected semantic neighbors
             const connectedLinks = data.links.filter(l => l.source.id === d.id || l.target.id === d.id);
             const connectedNodes = [d.id, ...connectedLinks.map(l => l.source.id === d.id ? l.target.id : l.source.id)];
 
-            // Dim irrelevant nodes to isolate cluster
             d3.selectAll('.graph-element').classed('dimmed', true).classed('highlighted', false);
-            
             node.filter(n => connectedNodes.includes(n.id)).classed('dimmed', false).classed('highlighted', true);
             link.filter(l => connectedLinks.includes(l)).classed('dimmed', false).classed('highlighted', true);
             linkText.filter(l => connectedLinks.includes(l)).classed('dimmed', false).classed('highlighted', true);
 
-            // Populate Presentation Panel
             document.getElementById('panel-domain').innerText = d.domain;
             document.getElementById('panel-title').innerText = d.title;
+            document.getElementById('panel-meta').innerText = d.meta;
             document.getElementById('panel-img').src = d.img;
             document.getElementById('panel-desc').innerHTML = d.desc;
 
-            // Generate Interdependency List mapping changes across domains[cite: 1]
             const listEl = document.getElementById('panel-links');
             listEl.innerHTML = "";
             connectedLinks.forEach(l => {
                 const isSource = l.source.id === d.id;
                 const relatedNode = isSource ? l.target : l.source;
-                const relationship = isSource ? `-> ${l.label} ->` : `<- ${l.label} <-`;
+                const relationship = isSource ? `determines / ${l.label} →` : `← affected by / ${l.label}`;
                 listEl.innerHTML += `<li><strong>${relationship}</strong> ${relatedNode.title} (${relatedNode.domain})</li>`;
             });
 
@@ -219,11 +223,7 @@
         function resetGraph() {
             document.getElementById('detail-panel').classList.remove('active');
             d3.selectAll('.graph-element').classed('dimmed', false).classed('highlighted', false);
-            
-            svg.transition().duration(750).call(
-                zoom.transform, 
-                d3.zoomIdentity.translate(width / 2, height / 2).scale(0.8).translate(-width/2, -height/2)
-            );
+            svg.transition().duration(800).call(zoom.transform, d3.zoomIdentity.translate(width / 2, height / 2).scale(0.85).translate(-width/2, -height/2));
         }
     </script>
 </body>
