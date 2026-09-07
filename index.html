@@ -174,7 +174,6 @@
         
         const svg = d3.select("#graph-container").append("svg").attr("width", width).attr("height", height).call(zoom);
         const g = svg.append("g");
-        
         const defs = svg.append("defs");
 
         const degreeMap = {};
@@ -182,6 +181,8 @@
             degreeMap[l.source] = (degreeMap[l.source] || 0) + 1;
             degreeMap[l.target] = (degreeMap[l.target] || 0) + 1;
         });
+
+        const generatedGrads = new Set();
 
         data.nodes.forEach(n => {
             const deg = degreeMap[n.id] || 1;
@@ -192,7 +193,8 @@
                 n.fill = `url(#${gradId})`;
                 n.fallbackColor = domainColors[n.domains[0]];
                 
-                if (!document.getElementById(gradId)) {
+                if (!generatedGrads.has(gradId)) {
+                    generatedGrads.add(gradId);
                     const grad = defs.append("linearGradient").attr("id", gradId).attr("x1", "0%").attr("y1", "0%").attr("x2", "100%").attr("y2", "100%");
                     n.domains.forEach((d, i) => {
                         grad.append("stop").attr("offset", `${(i / (n.domains.length - 1)) * 100}%`).attr("stop-color", domainColors[d] || "#fff");
@@ -315,7 +317,7 @@
                     <div class="interdependency-card" onclick="document.dispatchEvent(new CustomEvent('jumpToNode', {detail: '${relatedNode.id}'}))">
                         <span class="relation-tag">${isSource ? 'This Node' : relatedNode.title} ${relationVerb}</span>
                         <div class="relation-target">
-                            <span class="target-dot" style="background: ${relatedNode.fill}"></span>
+                            <span class="target-dot" style="background: ${relatedNode.fallbackColor || '#fff'}"></span>
                             ${isSource ? relatedNode.title : 'This Node'}
                         </div>
                     </div>`;
