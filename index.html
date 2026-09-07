@@ -3,157 +3,227 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Material Literacy Node Map</title>
+    <title>Semantic Knowledge Graph | Material Literacy</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #0f1115; color: #e0e0e0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; overflow: hidden; }
-        #canvas-container { width: 100%; height: 100%; position: absolute; top: 0; left: 0; }
-        
-        .side-panel {
-            position: absolute; top: 0; right: -450px; width: 400px; height: 100%;
-            background: rgba(22, 25, 31, 0.95); border-left: 1px solid #333;
-            box-shadow: -5px 0 15px rgba(0,0,0,0.5); transition: right 0.4s ease;
-            padding: 40px 30px; box-sizing: border-box; overflow-y: auto; z-index: 10;
+        :root {
+            --bg-color: #0d0d0f;
+            --text-primary: #f5f5f5;
+            --text-muted: #666666;
+            --accent: #d4af37;
+            --panel-bg: rgba(13, 13, 15, 0.85);
         }
-        .side-panel.active { right: 0; }
-        .close-btn { position: absolute; top: 20px; right: 20px; cursor: pointer; font-size: 1.5rem; color: #888; border: none; background: transparent; }
-        .close-btn:hover { color: #fff; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: var(--bg-color); color: var(--text-primary); font-family: 'Inter', sans-serif; overflow: hidden; }
         
-        #panel-title { font-size: 2rem; margin: 0 0 15px 0; font-weight: 300; color: #fff; border-bottom: 1px solid #444; padding-bottom: 10px; }
-        #panel-img { width: 100%; border-radius: 4px; margin-bottom: 20px; display: none; object-fit: cover; }
-        #panel-desc { font-size: 1.1rem; line-height: 1.6; color: #bbb; }
+        /* Typography & Canvas */
+        #graph-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+        .node-circle { transition: fill 0.3s, stroke 0.3s; cursor: pointer; }
+        .node-label { font-family: 'EB Garamond', serif; font-size: 16px; fill: var(--text-primary); pointer-events: none; text-shadow: 0 4px 8px rgba(0,0,0,0.9); }
+        .link-line { stroke: #333333; stroke-opacity: 0.6; fill: none; }
+        .link-label { font-family: 'Inter', sans-serif; font-size: 9px; fill: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; pointer-events: none; text-anchor: middle; }
         
-        .node circle { stroke: #fff; stroke-width: 1.5px; cursor: pointer; transition: fill 0.2s; }
-        .node circle:hover { stroke: #ff4757; stroke-width: 3px; }
-        .node text { font-size: 12px; pointer-events: none; text-shadow: 1px 1px 3px #000; }
-        .link { stroke: #444; stroke-opacity: 0.6; }
+        /* State Classes */
+        .dimmed { opacity: 0.1 !important; transition: opacity 0.5s ease; }
+        .highlighted { opacity: 1 !important; transition: opacity 0.5s ease; }
+        
+        /* Presentation Panel */
+        #detail-panel {
+            position: absolute; top: 0; right: -600px; width: 500px; height: 100%;
+            background: var(--panel-bg); backdrop-filter: blur(12px); border-left: 1px solid #222;
+            padding: 50px 40px; box-sizing: border-box; transition: right 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            overflow-y: auto; z-index: 100;
+        }
+        #detail-panel.active { right: 0; }
+        
+        .close-btn { position: absolute; top: 30px; right: 40px; background: none; border: none; color: var(--text-muted); font-size: 24px; cursor: pointer; transition: color 0.2s; }
+        .close-btn:hover { color: var(--text-primary); }
+        
+        .domain-tag { display: inline-block; padding: 4px 10px; border: 1px solid #444; border-radius: 20px; font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--accent); margin-bottom: 20px; }
+        h1 { font-family: 'EB Garamond', serif; font-size: 2.8rem; font-weight: 400; margin: 0 0 20px 0; line-height: 1.1; }
+        .meta-data { font-size: 0.85rem; color: var(--text-muted); border-bottom: 1px solid #333; padding-bottom: 20px; margin-bottom: 30px; }
+        
+        .media-container { width: 100%; aspect-ratio: 16/9; background: #1a1a1a; margin-bottom: 30px; border-radius: 4px; overflow: hidden; position: relative; }
+        .media-container img { width: 100%; height: 100%; object-fit: cover; opacity: 0.8; transition: opacity 0.3s; }
+        .media-container img:hover { opacity: 1; }
+        
+        .content-body { font-size: 1.1rem; line-height: 1.7; font-weight: 300; color: #cccccc; }
+        .interdependency-list { margin-top: 40px; padding-top: 20px; border-top: 1px solid #333; }
+        .interdependency-list h3 { font-family: 'EB Garamond', serif; font-size: 1.4rem; font-weight: 400; margin-bottom: 15px; color: var(--text-primary); }
+        .interdependency-list ul { padding-left: 20px; font-size: 0.95rem; line-height: 1.6; color: #aaa; }
     </style>
 </head>
 <body>
 
-    <div id="canvas-container"></div>
+    <div id="graph-container"></div>
 
-    <div id="panel" class="side-panel">
-        <button class="close-btn" onclick="closePanel()">×</button>
-        <h2 id="panel-title">Node Title</h2>
-        <img id="panel-img" src="" alt="Node Visualization">
-        <div id="panel-desc">Description text goes here.</div>
+    <div id="detail-panel">
+        <button class="close-btn" onclick="resetGraph()">×</button>
+        <div class="domain-tag" id="panel-domain">Domain</div>
+        <h1 id="panel-title">Node Title</h1>
+        <div class="meta-data" id="panel-meta">Semantic Node / Material Architecture</div>
+        
+        <div class="media-container">
+            <img id="panel-img" src="" alt="Data Visualization">
+        </div>
+        
+        <div class="content-body" id="panel-desc">
+            Detailed critical reflection mapping the material's properties, processes, and relationships across its trajectory.
+        </div>
+        
+        <div class="interdependency-list">
+            <h3>Direct Interdependencies</h3>
+            <ul id="panel-links"></ul>
+        </div>
     </div>
 
     <script>
-        // Data Structure: Easily append new nodes and interdependencies here
-        const graphData = {
+        // Graph Ontology Data mapping the 6 domains
+        const data = {
             nodes: [
-                { id: "Concrete", group: 0, radius: 25, title: "Cementitious Concrete", desc: "Central material profile.", img: "" },
-                { id: "Scientific", group: 1, radius: 15, title: "Scientific Domain", desc: "Mechanical, structural, and thermal properties.", img: "https://via.placeholder.com/400x250/2c3e50/ffffff?text=Microstructure+Scan" },
-                { id: "Technical", group: 2, radius: 15, title: "Technical Domain", desc: "Forming methods, energy utilized, and waste generated[cite: 1].", img: "https://via.placeholder.com/400x250/2c3e50/ffffff?text=Kiln+Diagram" },
-                { id: "Geo-political", group: 3, radius: 15, title: "Geo-political & Economic", desc: "Extraction sites, trade routes, and monopolies[cite: 1].", img: "" },
-                { id: "Historical", group: 4, radius: 15, title: "Historical Domain", desc: "Evolution of production volumes and key innovations[cite: 1].", img: "" },
-                { id: "Sensory", group: 5, radius: 15, title: "Sensory Domain", desc: "Optical properties, variances, and spatial qualities[cite: 1].", img: "https://via.placeholder.com/400x250/2c3e50/ffffff?text=Brutalist+Architecture" },
-                { id: "Ecological", group: 6, radius: 15, title: "Ecological Domain", desc: "Carbon impact, pollution generated, and end-of-life recovery[cite: 1].", img: "" },
-                { id: "Thermal Mass", group: 1, radius: 10, title: "Thermal Capacity", desc: "Concrete absorbs and stores heat energy.", img: "" },
-                { id: "Heat Island", group: 6, radius: 10, title: "Urban Heat Island", desc: "Interdependency: High thermal mass contributes to rising urban temperatures.", img: "" }
+                { id: "Concrete", group: "Core", size: 8, title: "Cementitious Concrete", domain: "Multi-Domain", desc: "The foundational material profile. A composite material consisting of a binder (cement) mixed with water and aggregate.", img: "https://images.unsplash.com/photo-1518002171953-a080ee817e1f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" },
+                
+                { id: "Calcination", group: "Technical", size: 5, title: "Kiln Calcination", domain: "Technical Domain", desc: "Forming method requiring kilns to reach 1450°C to transform raw materials into clinker[cite: 1]. High energy consumption dictates manufacturing locations.", img: "https://images.unsplash.com/photo-1504257121735-02ebcb710034?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" },
+                { id: "Embodied_Carbon", group: "Ecological", size: 5, title: "Embodied Carbon Emissions", domain: "Ecological Domain", desc: "The environmental footprint generated during extraction and manufacturing stages[cite: 1]. Accounts for roughly 8% of global CO2 emissions.", img: "https://images.unsplash.com/photo-1611273426858-450d8e3c9cce?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" },
+                
+                { id: "Thermal_Mass", group: "Scientific", size: 5, title: "Thermal Mass Capacity", domain: "Scientific Domain", desc: "Key thermal property denoting the ability of concrete to absorb, store, and release heat energy over time[cite: 1].", img: "https://images.unsplash.com/photo-1560930777-333e76a1ee5d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" },
+                { id: "Urban_Heat", group: "Ecological", size: 4, title: "Urban Heat Island Effect", domain: "Ecological Domain", desc: "Phenomenon where dense concrete urban areas experience significantly higher temperatures due to heat retention.", img: "https://images.unsplash.com/photo-1480796927426-f609979314bd?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" },
+                
+                { id: "Brutalism", group: "Sensory", size: 4, title: "Brutalist Aesthetics", domain: "Sensory Domain", desc: "Exploitation of the material's unique sensory qualities, specifically its raw texture and monolithic form[cite: 1].", img: "https://images.unsplash.com/photo-1524311583145-d5593bd3502a?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" },
+                { id: "Monopoly", group: "GeoPolitical", size: 4, title: "Regional Supply Monopolies", domain: "Geo-political Domain", desc: "Cartels and monopolies controlling extraction sites due to the high logistical cost of transporting heavy raw materials[cite: 1].", img: "https://images.unsplash.com/photo-1586528116311-ad8ed745eb33?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" },
+                
+                { id: "Patent_1824", group: "Historical", size: 4, title: "Joseph Aspdin's Patent", domain: "Historical Domain", desc: "Key historical milestone in 1824 that industrialized Portland cement production and standardized material behavior[cite: 1].", img: "https://images.unsplash.com/photo-1590059345229-37f26fc198ce?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80" }
             ],
             links: [
-                { source: "Concrete", target: "Scientific" },
-                { source: "Concrete", target: "Technical" },
-                { source: "Concrete", target: "Geo-political" },
-                { source: "Concrete", target: "Historical" },
-                { source: "Concrete", target: "Sensory" },
-                { source: "Concrete", target: "Ecological" },
-                { source: "Scientific", target: "Thermal Mass" },
-                { source: "Ecological", target: "Heat Island" },
-                { source: "Thermal Mass", target: "Heat Island" } // Interdependency link
+                { source: "Concrete", target: "Calcination", label: "requires" },
+                { source: "Calcination", target: "Embodied_Carbon", label: "generates" },
+                { source: "Concrete", target: "Thermal_Mass", label: "exhibits" },
+                { source: "Thermal_Mass", target: "Urban_Heat", label: "exacerbates" },
+                { source: "Concrete", target: "Brutalism", label: "enables" },
+                { source: "Calcination", target: "Monopoly", label: "drives" },
+                { source: "Patent_1824", target: "Calcination", label: "standardized" }
             ]
         };
 
         const width = window.innerWidth;
         const height = window.innerHeight;
-        const color = d3.scaleOrdinal(d3.schemeSet2);
 
-        const svg = d3.select("#canvas-container").append("svg")
-            .attr("width", width)
-            .attr("height", height)
-            .call(d3.zoom().on("zoom", (event) => g.attr("transform", event.transform)))
-            .append("g");
-
+        const zoom = d3.zoom().scaleExtent([0.3, 3]).on("zoom", (event) => g.attr("transform", event.transform));
+        const svg = d3.select("#graph-container").append("svg").attr("width", width).attr("height", height).call(zoom);
         const g = svg.append("g");
 
-        const simulation = d3.forceSimulation(graphData.nodes)
-            .force("link", d3.forceLink(graphData.links).id(d => d.id).distance(150))
-            .force("charge", d3.forceManyBody().strength(-400))
-            .force("center", d3.forceCenter(width / 2, height / 2));
+        // Force Simulation setup
+        const simulation = d3.forceSimulation(data.nodes)
+            .force("link", d3.forceLink(data.links).id(d => d.id).distance(200))
+            .force("charge", d3.forceManyBody().strength(-1200))
+            .force("center", d3.forceCenter(width / 2, height / 2))
+            .force("collide", d3.forceCollide().radius(60));
 
+        // Draw Links
         const link = g.append("g")
-            .selectAll("line")
-            .data(graphData.links)
-            .join("line")
-            .attr("class", "link")
-            .attr("stroke-width", 2);
+            .selectAll("path")
+            .data(data.links)
+            .join("path")
+            .attr("class", "link-line graph-element");
 
+        // Draw Link Labels (Semantic Relationships)
+        const linkText = g.append("g")
+            .selectAll("text")
+            .data(data.links)
+            .join("text")
+            .attr("class", "link-label graph-element")
+            .text(d => d.label);
+
+        // Draw Nodes
         const node = g.append("g")
             .selectAll("g")
-            .data(graphData.nodes)
+            .data(data.nodes)
             .join("g")
-            .attr("class", "node")
-            .call(drag(simulation))
-            .on("click", (event, d) => openPanel(d));
+            .attr("class", "node graph-element")
+            .call(d3.drag()
+                .on("start", (e, d) => { if (!e.active) simulation.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; })
+                .on("drag", (e, d) => { d.fx = e.x; d.fy = e.y; })
+                .on("end", (e, d) => { if (!e.active) simulation.alphaTarget(0); d.fx = null; d.fy = null; }))
+            .on("click", handleNodeClick);
 
         node.append("circle")
-            .attr("r", d => d.radius)
-            .attr("fill", d => color(d.group));
+            .attr("class", "node-circle")
+            .attr("r", d => d.size)
+            .attr("fill", d => d.group === "Core" ? "var(--accent)" : "none")
+            .attr("stroke", d => d.group === "Core" ? "var(--accent)" : "#ffffff")
+            .attr("stroke-width", d => d.group === "Core" ? 0 : 2);
 
         node.append("text")
-            .attr("dx", 18)
-            .attr("dy", ".35em")
-            .attr("fill", "#fff")
+            .attr("class", "node-label")
+            .attr("dx", 15)
+            .attr("dy", 5)
             .text(d => d.id);
 
+        // Simulation Tick Update
         simulation.on("tick", () => {
-            link.attr("x1", d => d.source.x)
-                .attr("y1", d => d.source.y)
-                .attr("x2", d => d.target.x)
-                .attr("y2", d => d.target.y);
+            link.attr("d", d => `M${d.source.x},${d.source.y} L${d.target.x},${d.target.y}`);
+            
+            linkText
+                .attr("x", d => (d.source.x + d.target.x) / 2)
+                .attr("y", d => (d.source.y + d.target.y) / 2 - 5)
+                // Auto-rotate text to align with line
+                .attr("transform", d => {
+                    const angle = Math.atan2(d.target.y - d.source.y, d.target.x - d.source.x) * 180 / Math.PI;
+                    const x = (d.source.x + d.target.x) / 2;
+                    const y = (d.source.y + d.target.y) / 2;
+                    return `rotate(${angle > 90 || angle < -90 ? angle + 180 : angle}, ${x}, ${y})`;
+                });
+
             node.attr("transform", d => `translate(${d.x},${d.y})`);
         });
 
-        function drag(simulation) {
-            function dragstarted(event) {
-                if (!event.active) simulation.alphaTarget(0.3).restart();
-                event.subject.fx = event.subject.x;
-                event.subject.fy = event.subject.y;
-            }
-            function dragged(event) {
-                event.subject.fx = event.x;
-                event.subject.fy = event.y;
-            }
-            function dragended(event) {
-                if (!event.active) simulation.alphaTarget(0);
-                event.subject.fx = null;
-                event.subject.fy = null;
-            }
-            return d3.drag()
-                .on("start", dragstarted)
-                .on("drag", dragged)
-                .on("end", dragended);
-        }
+        // Interactions
+        function handleNodeClick(event, d) {
+            // Re-center network on clicked node smoothly
+            const scale = 1.2;
+            svg.transition().duration(750).call(
+                zoom.transform, 
+                d3.zoomIdentity.translate(width / 3, height / 2).scale(scale).translate(-d.x, -d.y)
+            );
 
-        function openPanel(data) {
-            document.getElementById('panel-title').innerText = data.title;
-            document.getElementById('panel-desc').innerText = data.desc;
+            // Determine connected semantic neighbors
+            const connectedLinks = data.links.filter(l => l.source.id === d.id || l.target.id === d.id);
+            const connectedNodes = [d.id, ...connectedLinks.map(l => l.source.id === d.id ? l.target.id : l.source.id)];
+
+            // Dim irrelevant nodes to isolate cluster
+            d3.selectAll('.graph-element').classed('dimmed', true).classed('highlighted', false);
             
-            const imgEl = document.getElementById('panel-img');
-            if (data.img) {
-                imgEl.src = data.img;
-                imgEl.style.display = "block";
-            } else {
-                imgEl.style.display = "none";
-            }
-            document.getElementById('panel').classList.add('active');
+            node.filter(n => connectedNodes.includes(n.id)).classed('dimmed', false).classed('highlighted', true);
+            link.filter(l => connectedLinks.includes(l)).classed('dimmed', false).classed('highlighted', true);
+            linkText.filter(l => connectedLinks.includes(l)).classed('dimmed', false).classed('highlighted', true);
+
+            // Populate Presentation Panel
+            document.getElementById('panel-domain').innerText = d.domain;
+            document.getElementById('panel-title').innerText = d.title;
+            document.getElementById('panel-img').src = d.img;
+            document.getElementById('panel-desc').innerHTML = d.desc;
+
+            // Generate Interdependency List mapping changes across domains[cite: 1]
+            const listEl = document.getElementById('panel-links');
+            listEl.innerHTML = "";
+            connectedLinks.forEach(l => {
+                const isSource = l.source.id === d.id;
+                const relatedNode = isSource ? l.target : l.source;
+                const relationship = isSource ? `-> ${l.label} ->` : `<- ${l.label} <-`;
+                listEl.innerHTML += `<li><strong>${relationship}</strong> ${relatedNode.title} (${relatedNode.domain})</li>`;
+            });
+
+            document.getElementById('detail-panel').classList.add('active');
         }
 
-        function closePanel() {
-            document.getElementById('panel').classList.remove('active');
+        function resetGraph() {
+            document.getElementById('detail-panel').classList.remove('active');
+            d3.selectAll('.graph-element').classed('dimmed', false).classed('highlighted', false);
+            
+            svg.transition().duration(750).call(
+                zoom.transform, 
+                d3.zoomIdentity.translate(width / 2, height / 2).scale(0.8).translate(-width/2, -height/2)
+            );
         }
     </script>
 </body>
