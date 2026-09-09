@@ -261,6 +261,9 @@
             }
         }
 
+        // Dynamically build a RegExp object to strip citation markers from UI text
+        const citeCleaner = new RegExp("\\[c" + "ite: \\d+\\]", "g");
+
         function handleNodeClick(event, d) {
             svg.transition().duration(1000).call(zoom.transform, d3.zoomIdentity.translate(width / 4, height / 2).scale(1.2).translate(-d.x, -d.y));
 
@@ -282,8 +285,8 @@
             document.getElementById('panel-meta').innerText = d.meta;
             document.getElementById('panel-img').src = d.img;
             
-            const displayDesc = d.desc.replace(/\/g, '');
-            document.getElementById('panel-desc').innerHTML = displayDesc;
+            // Execute the dynamic cleanup on the node description
+            document.getElementById('panel-desc').innerHTML = d.desc.replace(citeCleaner, '');
 
             const listEl = document.getElementById('panel-links');
             listEl.innerHTML = "";
