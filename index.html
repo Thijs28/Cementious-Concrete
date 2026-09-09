@@ -27,12 +27,16 @@
         .highlighted { opacity: 1 !important; transition: opacity 0.4s ease; }
         .highlighted-link { stroke: #666 !important; stroke-opacity: 0.9 !important; stroke-width: 1.5px !important; }
         
-        #detail-panel {
-            position: absolute; top: 0; right: -750px; width: 600px; height: 100%;
-            background: var(--panel-bg); backdrop-filter: blur(20px); border-left: 1px solid #1f2229;
-            padding: 50px 45px; box-sizing: border-box; transition: right 0.7s cubic-bezier(0.19, 1, 0.22, 1);
-            overflow-y: auto; z-index: 100; box-shadow: -15px 0 40px rgba(0,0,0,0.9);
-        }
+        /* Domain Legend UI */
+        #legend { position: absolute; bottom: 40px; left: 40px; background: rgba(11, 12, 16, 0.85); backdrop-filter: blur(15px); border: 1px solid #1f2229; border-radius: 8px; padding: 25px; z-index: 50; box-shadow: 0 10px 30px rgba(0,0,0,0.8); min-width: 180px; }
+        .legend-title { font-family: 'EB Garamond', serif; color: var(--text-primary); font-size: 1.4rem; margin-bottom: 15px; border-bottom: 1px solid #1f2229; padding-bottom: 8px; }
+        .legend-item { display: flex; align-items: center; gap: 12px; padding: 8px 0; cursor: pointer; font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; transition: all 0.2s; }
+        .legend-item:hover { color: #fff; transform: translateX(5px); }
+        .legend-item.active { color: #fff; font-weight: 600; }
+        .legend-color { width: 14px; height: 14px; border-radius: 50%; box-shadow: 0 0 5px rgba(0,0,0,0.5); }
+
+        /* Presentation Panel */
+        #detail-panel { position: absolute; top: 0; right: -750px; width: 600px; height: 100%; background: var(--panel-bg); backdrop-filter: blur(20px); border-left: 1px solid #1f2229; padding: 50px 45px; box-sizing: border-box; transition: right 0.7s cubic-bezier(0.19, 1, 0.22, 1); overflow-y: auto; z-index: 100; box-shadow: -15px 0 40px rgba(0,0,0,0.9); }
         #detail-panel.active { right: 0; }
         
         .close-btn { position: absolute; top: 30px; right: 40px; background: none; border: none; color: var(--text-muted); font-size: 32px; cursor: pointer; transition: color 0.2s; }
@@ -64,6 +68,11 @@
 <body>
 
     <div id="graph-container"></div>
+    
+    <div id="legend">
+        <div class="legend-title">Domains</div>
+        <div id="legend-items"></div>
+    </div>
 
     <div id="detail-panel">
         <button class="close-btn" onclick="resetGraph()">×</button>
@@ -93,6 +102,8 @@
             "Ecological": "#4A7A59",   
             "Sensory": "#7A5C7A"       
         };
+        
+        let currentDomainFilter = null;
 
         const data = {
             nodes: [
@@ -163,6 +174,26 @@
         const svg = d3.select("#graph-container").append("svg").attr("width", width).attr("height", height).call(zoom);
         const g = svg.append("g");
         const defs = svg.append("defs");
+
+        // Construct Legend Interface
+        const legendContainer = document.getElementById('legend-items');
+        for (const [domain, color] of Object.entries(domainColors)) {
+            const item = document.createElement('div');
+            item.className = 'legend-item';
+            item.id = 'legend-' + domain;
+            item.onclick = () => toggleDomainFilter(domain);
+            
+            const colorBox = document.createElement('div');
+            colorBox.className = 'legend-color';
+            colorBox.style.background = color;
+            
+            const text = document.createElement('span');
+            text.innerText = domain;
+            
+            item.appendChild(colorBox);
+            item.appendChild(text);
+            legendContainer.appendChild(item);
+        }
 
         const degreeMap = {};
         data.links.forEach(l => {
@@ -240,8 +271,55 @@
             node.attr("transform", d => `translate(${d.x},${d.y})`);
         });
 
+        // Filter functionality for the Legend UI
+        function toggleDomainFilter(domain) {
+            document.getElementById('detail-panel').classList.remove('active');
+
+            if (currentDomainFilter === domain) {
+                currentDomainFilter = null;
+                d3.selectAll('.legend-item').classed('active', false);
+                d3.selectAll('.graph-element').classed('dimmed', false).classed('highlighted', false).classed('highlighted-link', false);
+                d3.selectAll('.link-label').classed('show-labels', false);
+                svg.transition().duration(1000).call(zoom.transform, d3.zoomIdentity.translate(width / 2, height / 2).scale(0.55).translate(-width/2, -height/2));
+            } else {
+                currentDomainFilter = domain;
+                d3.selectAll('.legend-item').classed('active', false);
+                document.getElementById('legend-' + domain).classList.add('active');
+
+                d3.selectAll('.graph-element').classed('dimmed', true).classed('highlighted', false).classed('highlighted-link', false);
+                d3.selectAll('.link-label').classed('show-labels', false);
+                
+                // Highlight nodes inside the selected domain
+                node.filter(n => n.domains.includes(domain)).classed('dimmed', false).classed('highlighted', true);
+                
+                // Highlight links where both ends exist within the chosen domain framework
+                link.filter(l => l.source.domains.includes(domain) && l.target.domains.includes(domain)).classed('dimmed', false).classed('highlighted-link', true);
+                linkText.filter(l => l.source.domains.includes(domain) && l.target.domains.includes(domain)).classed('dimmed', false).classed('show-labels', true);
+
+                // Autonomously frame the isolated domain cluster
+                const domainNodes = data.nodes.filter(n => n.domains.includes(domain));
+                if (domainNodes.length > 0) {
+                    const minX = d3.min(domainNodes, d => d.x);
+                    const maxX = d3.max(domainNodes, d => d.x);
+                    const minY = d3.min(domainNodes, d => d.y);
+                    const maxY = d3.max(domainNodes, d => d.y);
+
+                    const cx = (minX + maxX) / 2;
+                    const cy = (minY + maxY) / 2;
+                    const dx = Math.max(maxX - minX, 200); 
+                    const dy = Math.max(maxY - minY, 200);
+
+                    const scale = Math.max(0.4, Math.min(1.8, 0.7 / Math.max(dx / width, dy / height)));
+                    
+                    svg.transition().duration(1000).call(zoom.transform, d3.zoomIdentity.translate(width / 2, height / 2).scale(scale).translate(-cx, -cy));
+                }
+            }
+        }
+
         function handleNodeHover(event, d) {
             if (document.getElementById('detail-panel').classList.contains('active')) return;
+            if (currentDomainFilter) return; // Prevent local hover state from overwriting macro filters
+            
             const connectedLinks = data.links.filter(l => l.source.id === d.id || l.target.id === d.id);
             const connectedNodes = [d.id, ...connectedLinks.map(l => l.source.id === d.id ? l.target.id : l.source.id)];
             
@@ -253,6 +331,8 @@
 
         function handleNodeOut() {
             if (document.getElementById('detail-panel').classList.contains('active')) return;
+            if (currentDomainFilter) return;
+            
             d3.selectAll('.graph-element').classed('dimmed', false).classed('highlighted-link', false);
             
             const currentZoom = d3.zoomTransform(svg.node()).k;
@@ -265,6 +345,9 @@
         const citeCleaner = new RegExp("\\[c" + "ite: \\d+\\]", "g");
 
         function handleNodeClick(event, d) {
+            currentDomainFilter = null; // Clear macro filter on explicit node select
+            d3.selectAll('.legend-item').classed('active', false);
+
             svg.transition().duration(1000).call(zoom.transform, d3.zoomIdentity.translate(width / 4, height / 2).scale(1.2).translate(-d.x, -d.y));
 
             const connectedLinks = data.links.filter(l => l.source.id === d.id || l.target.id === d.id);
@@ -322,9 +405,11 @@
         });
 
         function resetGraph() {
+            currentDomainFilter = null;
+            d3.selectAll('.legend-item').classed('active', false);
             document.getElementById('detail-panel').classList.remove('active');
             d3.selectAll('.graph-element').classed('dimmed', false).classed('highlighted', false).classed('highlighted-link', false);
-            svg.transition().duration(1000).call(zoom.transform, d3.zoomIdentity.translate(width / 2, height / 2).scale(0.6).translate(-width/2, -height/2));
+            svg.transition().duration(1000).call(zoom.transform, d3.zoomIdentity.translate(width / 2, height / 2).scale(0.55).translate(-width/2, -height/2));
             d3.selectAll('.link-label').classed('show-labels', false);
         }
         
