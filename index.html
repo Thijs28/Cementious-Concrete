@@ -22,6 +22,9 @@
         .highlighted { opacity: 1 !important; transition: opacity 0.4s ease; }
         .highlighted-link { stroke: #666 !important; stroke-opacity: 0.9 !important; stroke-width: 1.5px !important; }
         
+        /* New class to smoothly hide undated nodes during timeline view */
+        .hidden-timeline { opacity: 0 !important; pointer-events: none !important; transition: opacity 0.5s ease; }
+        
         .axis line, .axis path { stroke: #333; }
         .axis text { fill: #888; font-family: 'Inter', sans-serif; font-size: 14px; }
         
@@ -107,7 +110,6 @@
             d3.csv("links.csv")
         ]).then(function([rawNodes, rawLinks]) {
             
-            // Map new domain1 and domain2 columns instead of splitting strings
             const nodes = rawNodes.map(d => {
                 const extractedDomains = [];
                 if (d.domain1 && d.domain1.trim() !== "") extractedDomains.push(d.domain1.trim());
@@ -120,7 +122,8 @@
                     meta: d.meta,
                     desc: d.desc,
                     img: d.img,
-                    year: d.year ? parseInt(d.year) : 2026
+                    // If no year exists, return null instead of a fallback date
+                    year: (d.year && d.year.trim() !== "") ? parseInt(d.year) : null
                 };
             });
 
@@ -196,6 +199,7 @@
                 nodeGroups.attr("transform", d => `translate(${d.x},${d.y})`);
             });
 
+            // Adjust X-axis to focus purely on historical dates available in data
             const xScale = d3.scaleLinear().domain([1800, 2030]).range([-width, width * 2]);
             const xAxis = d3.axisBottom(xScale).tickFormat(d3.format("d")).ticks(10);
             xAxisGroup.call(xAxis);
@@ -206,14 +210,27 @@
                 
                 if (isTimelineMode) {
                     xAxisGroup.transition().duration(1000).style("opacity", 1);
+                    
+                    // Filter out nodes without a year and their connected links
+                    nodeGroups.filter(d => d.year === null).classed('hidden-timeline', true);
+                    linkPaths.filter(l => l.source.year === null || l.target.year === null).classed('hidden-timeline', true);
+                    linkTexts.filter(l => l.source.year === null || l.target.year === null).classed('hidden-timeline', true);
+
+                    // Apply layout forces ONLY to nodes with a year
                     simulation
-                        .force("x", d3.forceX(d => xScale(d.year)).strength(1))
-                        .force("y", d3.forceY(height / 2).strength(0.1))
+                        .force("x", d3.forceX(d => d.year !== null ? xScale(d.year) : 0).strength(d => d.year !== null ? 1 : 0))
+                        .force("y", d3.forceY(height / 2).strength(d => d.year !== null ? 0.1 : 0))
                         .force("center", null)
                         .alpha(1).restart();
+                        
                     svg.transition().duration(1000).call(zoom.transform, d3.zoomIdentity.translate(width/2, height/2).scale(0.4).translate(-width/2, -height/2));
                 } else {
                     xAxisGroup.transition().duration(1000).style("opacity", 0);
+                    
+                    // Restore visibility to all elements
+                    nodeGroups.classed('hidden-timeline', false);
+                    linkPaths.classed('hidden-timeline', false);
+                    
                     simulation
                         .force("x", null).force("y", null)
                         .force("center", d3.forceCenter(width / 2, height / 2))
@@ -238,18 +255,18 @@
             if (currentDomainFilter === domain) {
                 currentDomainFilter = null;
                 d3.selectAll('.legend-item').classed('active', false);
-                d3.selectAll('.graph-element').classed('dimmed', false).classed('highlighted', false);
+                d3.selectAll('.graph-element:not(.hidden-timeline)').classed('dimmed', false).classed('highlighted', false);
             } else {
                 currentDomainFilter = domain;
                 d3.selectAll('.legend-item').classed('active', false);
                 document.getElementById('legend-' + domain).classList.add('active');
                 
                 d3.selectAll('.graph-element').classed('dimmed', true).classed('highlighted', false);
-                d3.selectAll('.node').filter(n => n.domains.includes(domain)).classed('dimmed', false).classed('highlighted', true);
-                d3.selectAll('.link-line').filter(l => l.source.domains.includes(domain) && l.target.domains.includes(domain)).classed('dimmed', false);
+                d3.selectAll('.node:not(.hidden-timeline)').filter(n => n.domains.includes(domain)).classed('dimmed', false).classed('highlighted', true);
+                d3.selectAll('.link-line:not(.hidden-timeline)').filter(l => l.source.domains.includes(domain) && l.target.domains.includes(domain)).classed('dimmed', false);
                 
                 const domainNodes = nodes.filter(n => n.domains.includes(domain));
-                if (domainNodes.length > 0) {
+                if (domainNodes.length > 0 && !isTimelineMode) {
                     const cx = (d3.min(domainNodes, d => d.x) + d3.max(domainNodes, d => d.x)) / 2;
                     const cy = (d3.min(domainNodes, d => d.y) + d3.max(domainNodes, d => d.y)) / 2;
                     svg.transition().duration(1000).call(zoom.transform, d3.zoomIdentity.translate(width/2, height/2).scale(0.8).translate(-cx, -cy));
@@ -265,7 +282,9 @@
             nodeGroups.classed('dimmed', n => !connectedNodes.includes(n.id));
             linkPaths.classed('dimmed', true); linkTexts.classed('show-labels', false);
             linkPaths.filter(l => connectedLinks.includes(l)).classed('dimmed', false).classed('highlighted-link', true);
-            linkTexts.filter(l => connectedLinks.includes(l)).classed('show-labels', true);
+            
+            // Only show link text if the link itself is not hidden by timeline mode
+            linkTexts.filter(l => connectedLinks.includes(l) && !d3.select(l).classed('hidden-timeline')).classed('show-labels', true);
         }
 
         function handleNodeOut(nodeGroups, linkPaths, linkTexts) {
@@ -274,6 +293,8 @@
             linkPaths.classed('dimmed', false).classed('highlighted-link', false);
             if (d3.zoomTransform(svg.node()).k <= 1.2) linkTexts.classed('show-labels', false);
         }
+
+        const citeCleaner = new RegExp("\\[c" + "ite: \\d+\\]", "g");
 
         function handleNodeClick(d, nodes, links, linkPaths, linkTexts, nodeGroups) {
             currentDomainFilter = null; d3.selectAll('.legend-item').classed('active', false);
@@ -285,13 +306,14 @@
             nodeGroups.classed('dimmed', n => !connectedNodes.includes(n.id));
             linkPaths.classed('dimmed', true).classed('highlighted-link', false);
             linkPaths.filter(l => connectedLinks.includes(l)).classed('dimmed', false).classed('highlighted-link', true);
-            linkTexts.filter(l => connectedLinks.includes(l)).classed('show-labels', true);
+            
+            linkTexts.filter(l => connectedLinks.includes(l) && !d3.select(l).classed('hidden-timeline')).classed('show-labels', true);
 
             document.getElementById('panel-domain-container').innerHTML = d.domains.map(dom => `<div class="domain-tag" style="background:${domainColors[dom]}33; border-color:${domainColors[dom]}">${dom}</div>`).join('');
             document.getElementById('panel-title').innerText = d.title;
             document.getElementById('panel-meta').innerText = d.meta;
             document.getElementById('panel-img').src = d.img;
-            document.getElementById('panel-desc').innerHTML = d.desc.replace(new RegExp("\\[c" + "ite: \\d+\\]", "g"), '');
+            document.getElementById('panel-desc').innerHTML = d.desc.replace(citeCleaner, '');
 
             const groupedLinks = {};
             connectedLinks.forEach(l => { (groupedLinks[l.category] = groupedLinks[l.category] || []).push(l); });
