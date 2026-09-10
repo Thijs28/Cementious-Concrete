@@ -10,12 +10,17 @@
         :root { --bg-color: #0b0c10; --text-primary: #e0e6ed; --text-muted: #8b929a; --panel-bg: rgba(11, 12, 16, 0.96); }
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: var(--bg-color); color: var(--text-primary); font-family: 'Inter', sans-serif; overflow: hidden; }
         
+        /* Disable text selection on the SVG to fix panning issues */
+        svg { user-select: none; -webkit-user-select: none; }
+
         #graph-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
         .node-circle { transition: stroke 0.3s, r 0.3s; cursor: pointer; }
         .node-circle:hover { stroke: #ffffff !important; stroke-width: 2.5px !important; }
-        .node-label { font-family: 'EB Garamond', serif; font-size: 14px; fill: var(--text-primary); pointer-events: none; text-shadow: 0 4px 12px rgba(0,0,0,1); transition: opacity 0.3s; }
+        
+        /* Prevent pointer interference from labels */
+        .node-label { font-family: 'EB Garamond', serif; font-size: 14px; fill: var(--text-primary); pointer-events: none; text-shadow: 0 4px 12px rgba(0,0,0,1); transition: opacity 0.3s; user-select: none; }
         .link-line { stroke: #2a2d34; stroke-opacity: 0.6; fill: none; transition: stroke-opacity 0.3s, stroke 0.3s; }
-        .link-label { font-family: 'Inter', sans-serif; font-size: 9px; fill: #7a8288; text-transform: uppercase; letter-spacing: 1.5px; pointer-events: none; text-anchor: middle; font-weight: 600; text-shadow: 0 2px 4px rgba(0,0,0,0.9); opacity: 0; transition: opacity 0.3s; }
+        .link-label { font-family: 'Inter', sans-serif; font-size: 9px; fill: #7a8288; text-transform: uppercase; letter-spacing: 1.5px; pointer-events: none; text-anchor: middle; font-weight: 600; text-shadow: 0 2px 4px rgba(0,0,0,0.9); opacity: 0; transition: opacity 0.3s; user-select: none; }
         
         .show-labels { opacity: 1 !important; }
         .dimmed { opacity: 0.04 !important; transition: opacity 0.4s ease; filter: grayscale(100%); pointer-events: none; }
@@ -24,17 +29,21 @@
         .hidden-timeline { opacity: 0 !important; pointer-events: none !important; transition: opacity 0.5s ease; }
         
         .axis line, .axis path { stroke: #333; }
-        .axis text { fill: #888; font-family: 'Inter', sans-serif; font-size: 14px; }
+        .axis text { fill: #888; font-family: 'Inter', sans-serif; font-size: 14px; pointer-events: none; user-select: none; }
         
-        #ui-layer { position: absolute; bottom: 40px; left: 40px; display: flex; gap: 20px; z-index: 50; align-items: flex-end; }
-        #legend { background: rgba(11, 12, 16, 0.85); backdrop-filter: blur(15px); border: 1px solid #1f2229; border-radius: 8px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); min-width: 180px; }
-        .legend-title { font-family: 'EB Garamond', serif; color: var(--text-primary); font-size: 1.4rem; margin-bottom: 15px; border-bottom: 1px solid #1f2229; padding-bottom: 8px; }
-        .legend-item { display: flex; align-items: center; gap: 12px; padding: 8px 0; cursor: pointer; font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; transition: all 0.2s; }
+        /* Pointer-events: none allows graph panning in empty spaces of the UI layer */
+        #ui-layer { position: absolute; bottom: 40px; left: 40px; display: flex; gap: 20px; z-index: 50; align-items: flex-end; pointer-events: none; }
+        
+        /* Re-enable pointer events for the actual interactive UI elements */
+        #legend { pointer-events: auto; background: rgba(11, 12, 16, 0.85); backdrop-filter: blur(15px); border: 1px solid #1f2229; border-radius: 8px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); min-width: 180px; }
+        .btn-toggle { pointer-events: auto; background: #D4AF37; color: #000; border: none; padding: 15px 25px; border-radius: 8px; font-family: 'Inter', sans-serif; font-size: 0.9rem; text-transform: uppercase; font-weight: 600; letter-spacing: 1px; cursor: pointer; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3); transition: all 0.3s; height: fit-content; }
+        
+        .legend-title { font-family: 'EB Garamond', serif; color: var(--text-primary); font-size: 1.4rem; margin-bottom: 15px; border-bottom: 1px solid #1f2229; padding-bottom: 8px; user-select: none; }
+        .legend-item { display: flex; align-items: center; gap: 12px; padding: 8px 0; cursor: pointer; font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; transition: all 0.2s; user-select: none; }
         .legend-item:hover { color: #fff; transform: translateX(5px); }
         .legend-item.active { color: #fff; font-weight: 600; }
         .legend-color { width: 14px; height: 14px; border-radius: 50%; }
 
-        .btn-toggle { background: #D4AF37; color: #000; border: none; padding: 15px 25px; border-radius: 8px; font-family: 'Inter', sans-serif; font-size: 0.9rem; text-transform: uppercase; font-weight: 600; letter-spacing: 1px; cursor: pointer; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3); transition: all 0.3s; height: fit-content; }
         .btn-toggle:hover { background: #e5c158; transform: translateY(-2px); }
 
         #detail-panel { position: absolute; top: 0; right: -750px; width: 600px; height: 100%; background: var(--panel-bg); backdrop-filter: blur(20px); border-left: 1px solid #1f2229; padding: 50px 45px; box-sizing: border-box; transition: right 0.7s cubic-bezier(0.19, 1, 0.22, 1); overflow-y: auto; z-index: 100; box-shadow: -15px 0 40px rgba(0,0,0,0.9); }
@@ -310,7 +319,10 @@
         function handleNodeClick(d, nodes, links, linkPaths, linkTexts, nodeGroups) {
             try {
                 currentDomainFilter = null; d3.selectAll('.legend-item').classed('active', false);
-                svg.transition().duration(1000).call(zoom.transform, d3.zoomIdentity.translate(width/4, height/2).scale(1.2).translate(-d.x, -d.y));
+                
+                // Calculates the exact center of the remaining viewing space so the node doesn't hide behind the UI Panel
+                const offsetX = width > 800 ? (width - 600) / 2 : width / 3;
+                svg.transition().duration(1000).call(zoom.transform, d3.zoomIdentity.translate(offsetX, height/2).scale(0.75).translate(-d.x, -d.y));
 
                 const connectedLinks = links.filter(l => l.source.id === d.id || l.target.id === d.id);
                 const connectedNodes = [d.id, ...connectedLinks.map(l => l.source.id === d.id ? l.target.id : l.source.id)];
@@ -347,7 +359,6 @@
                     arr.forEach(l => {
                         const isSrc = l.source.id === d.id;
                         const related = isSrc ? l.target : l.source;
-                        
                         if(!related || !related.id) return;
                         
                         linksHTML += `
@@ -361,9 +372,7 @@
                 document.getElementById('panel-links').innerHTML = linksHTML;
                 document.getElementById('detail-panel').classList.add('active');
                 
-            } catch(e) {
-                console.error("Sidebar encountered an error:", e);
-            }
+            } catch(e) { console.error("Sidebar encountered an error:", e); }
         }
 
         function resetGraph() {
