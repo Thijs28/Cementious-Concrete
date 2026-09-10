@@ -3,16 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Semantic Knowledge Graph | Macro Scale Material Literacy</title>
+    <title>Semantic Knowledge Graph | Material Literacy</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --bg-color: #0b0c10;
-            --text-primary: #e0e6ed;
-            --text-muted: #8b929a;
-            --panel-bg: rgba(11, 12, 16, 0.96);
-        }
+        :root { --bg-color: #0b0c10; --text-primary: #e0e6ed; --text-muted: #8b929a; --panel-bg: rgba(11, 12, 16, 0.96); }
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: var(--bg-color); color: var(--text-primary); font-family: 'Inter', sans-serif; overflow: hidden; }
         
         #graph-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
@@ -23,45 +18,42 @@
         .link-label { font-family: 'Inter', sans-serif; font-size: 9px; fill: #7a8288; text-transform: uppercase; letter-spacing: 1.5px; pointer-events: none; text-anchor: middle; font-weight: 600; text-shadow: 0 2px 4px rgba(0,0,0,0.9); opacity: 0; transition: opacity 0.3s; }
         
         .show-labels { opacity: 1 !important; }
-        .dimmed { opacity: 0.04 !important; transition: opacity 0.4s ease; filter: grayscale(100%); }
+        .dimmed { opacity: 0.04 !important; transition: opacity 0.4s ease; filter: grayscale(100%); pointer-events: none; }
         .highlighted { opacity: 1 !important; transition: opacity 0.4s ease; }
         .highlighted-link { stroke: #666 !important; stroke-opacity: 0.9 !important; stroke-width: 1.5px !important; }
         
-        /* Domain Legend UI */
-        #legend { position: absolute; bottom: 40px; left: 40px; background: rgba(11, 12, 16, 0.85); backdrop-filter: blur(15px); border: 1px solid #1f2229; border-radius: 8px; padding: 25px; z-index: 50; box-shadow: 0 10px 30px rgba(0,0,0,0.8); min-width: 180px; }
+        .axis line, .axis path { stroke: #333; }
+        .axis text { fill: #888; font-family: 'Inter', sans-serif; font-size: 14px; }
+        
+        #ui-layer { position: absolute; bottom: 40px; left: 40px; display: flex; gap: 20px; z-index: 50; align-items: flex-end; }
+        #legend { background: rgba(11, 12, 16, 0.85); backdrop-filter: blur(15px); border: 1px solid #1f2229; border-radius: 8px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); min-width: 180px; }
         .legend-title { font-family: 'EB Garamond', serif; color: var(--text-primary); font-size: 1.4rem; margin-bottom: 15px; border-bottom: 1px solid #1f2229; padding-bottom: 8px; }
         .legend-item { display: flex; align-items: center; gap: 12px; padding: 8px 0; cursor: pointer; font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; transition: all 0.2s; }
         .legend-item:hover { color: #fff; transform: translateX(5px); }
         .legend-item.active { color: #fff; font-weight: 600; }
-        .legend-color { width: 14px; height: 14px; border-radius: 50%; box-shadow: 0 0 5px rgba(0,0,0,0.5); }
+        .legend-color { width: 14px; height: 14px; border-radius: 50%; }
 
-        /* Presentation Panel */
+        .btn-toggle { background: #D4AF37; color: #000; border: none; padding: 15px 25px; border-radius: 8px; font-family: 'Inter', sans-serif; font-size: 0.9rem; text-transform: uppercase; font-weight: 600; letter-spacing: 1px; cursor: pointer; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3); transition: all 0.3s; height: fit-content; }
+        .btn-toggle:hover { background: #e5c158; transform: translateY(-2px); }
+
         #detail-panel { position: absolute; top: 0; right: -750px; width: 600px; height: 100%; background: var(--panel-bg); backdrop-filter: blur(20px); border-left: 1px solid #1f2229; padding: 50px 45px; box-sizing: border-box; transition: right 0.7s cubic-bezier(0.19, 1, 0.22, 1); overflow-y: auto; z-index: 100; box-shadow: -15px 0 40px rgba(0,0,0,0.9); }
         #detail-panel.active { right: 0; }
-        
-        .close-btn { position: absolute; top: 30px; right: 40px; background: none; border: none; color: var(--text-muted); font-size: 32px; cursor: pointer; transition: color 0.2s; }
+        .close-btn { position: absolute; top: 30px; right: 40px; background: none; border: none; color: var(--text-muted); font-size: 32px; cursor: pointer; }
         .close-btn:hover { color: var(--text-primary); }
         
-        .domain-tag-container { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
-        .domain-tag { padding: 6px 14px; border: 1px solid #333; border-radius: 20px; font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.8); }
-        h1 { font-family: 'EB Garamond', serif; font-size: 2.8rem; font-weight: 400; margin: 0 0 15px 0; line-height: 1.1; }
-        .meta-data { font-size: 0.85rem; color: var(--text-muted); border-bottom: 1px solid #1f2229; padding-bottom: 20px; margin-bottom: 30px; line-height: 1.5; text-transform: uppercase; letter-spacing: 1px;}
-        
-        .media-container { width: 100%; aspect-ratio: 16/9; background: #000; margin-bottom: 30px; border-radius: 6px; overflow: hidden; position: relative; border: 1px solid #1f2229; }
-        .media-container img { width: 100%; height: 100%; object-fit: cover; opacity: 0.85; transition: opacity 0.3s; }
-        .media-container img:hover { opacity: 1; }
-        
+        .domain-tag { display: inline-block; padding: 6px 14px; border: 1px solid #333; border-radius: 20px; font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: #fff; margin-bottom: 20px; margin-right: 8px;}
+        h1 { font-family: 'EB Garamond', serif; font-size: 2.8rem; font-weight: 400; margin: 0 0 15px 0; }
+        .meta-data { font-size: 0.85rem; color: var(--text-muted); border-bottom: 1px solid #1f2229; padding-bottom: 20px; margin-bottom: 30px; text-transform: uppercase; letter-spacing: 1px;}
+        .media-container { width: 100%; aspect-ratio: 16/9; background: #000; margin-bottom: 30px; border-radius: 6px; overflow: hidden; border: 1px solid #1f2229; }
+        .media-container img { width: 100%; height: 100%; object-fit: cover; opacity: 0.85; }
         .content-body { font-size: 1.05rem; line-height: 1.7; font-weight: 300; color: #c4c9d0; }
         
         .interdependency-list { margin-top: 40px; padding-top: 25px; border-top: 1px solid #1f2229; }
-        .interdependency-list h3 { font-family: 'EB Garamond', serif; font-size: 1.6rem; font-weight: 400; margin-bottom: 15px; color: var(--text-primary); }
-        
-        .category-header { font-family: 'Inter', sans-serif; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1.5px; color: #6a737d; border-bottom: 1px solid #1f2229; padding-bottom: 5px; margin: 25px 0 15px 0; }
-        
-        .interdependency-sentence { background: rgba(255,255,255,0.02); border: 1px solid #1f2229; padding: 18px; border-radius: 6px; margin-bottom: 12px; font-size: 1.05rem; line-height: 1.6; color: #a0a5ab; transition: background 0.2s, border-color 0.2s; }
+        .interdependency-list h3 { font-family: 'EB Garamond', serif; font-size: 1.6rem; font-weight: 400; margin-bottom: 15px; }
+        .category-header { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1.5px; color: #6a737d; border-bottom: 1px solid #1f2229; padding-bottom: 5px; margin: 25px 0 15px 0; }
+        .interdependency-sentence { background: rgba(255,255,255,0.02); border: 1px solid #1f2229; padding: 18px; border-radius: 6px; margin-bottom: 12px; font-size: 1.05rem; line-height: 1.6; color: #a0a5ab; transition: background 0.2s; }
         .interdependency-sentence:hover { background: rgba(255,255,255,0.04); border-color: #3b4048; }
-        .node-link { font-weight: 600; cursor: pointer; border-bottom: 1px dashed rgba(255,255,255,0.3); transition: opacity 0.2s; padding-bottom: 2px; }
-        .node-link:hover { opacity: 0.7; }
+        .node-link { font-weight: 600; cursor: pointer; border-bottom: 1px dashed rgba(255,255,255,0.3); padding-bottom: 2px; }
         .verb-text { font-style: italic; margin: 0 4px; color: #7a8288; }
     </style>
 </head>
@@ -69,23 +61,21 @@
 
     <div id="graph-container"></div>
     
-    <div id="legend">
-        <div class="legend-title">Domains</div>
-        <div id="legend-items"></div>
+    <div id="ui-layer">
+        <div id="legend">
+            <div class="legend-title">Domains</div>
+            <div id="legend-items"></div>
+        </div>
+        <button id="timelineToggle" class="btn-toggle">View Chronology</button>
     </div>
 
     <div id="detail-panel">
         <button class="close-btn" onclick="resetGraph()">×</button>
-        <div class="domain-tag-container" id="panel-domain-container"></div>
-        <h1 id="panel-title">Node Title</h1>
+        <div id="panel-domain-container"></div>
+        <h1 id="panel-title"></h1>
         <div class="meta-data" id="panel-meta"></div>
-        
-        <div class="media-container">
-            <img id="panel-img" src="" alt="Domain Visualization">
-        </div>
-        
+        <div class="media-container"><img id="panel-img" src="" alt="Data"></div>
         <div class="content-body" id="panel-desc"></div>
-        
         <div class="interdependency-list">
             <h3>Key Interdependencies</h3>
             <div id="panel-links"></div>
@@ -93,327 +83,238 @@
     </div>
 
     <script>
-        const domainColors = {
-            "Core": "#D4AF37",         
-            "Scientific": "#5D8AA8",   
-            "Technical": "#CD7F32",    
-            "Historical": "#8B9A9A",   
-            "GeoPolitical": "#B24C4C", 
-            "Ecological": "#4A7A59",   
-            "Sensory": "#7A5C7A"       
-        };
+        const domainColors = { "Core": "#D4AF37", "Scientific": "#5D8AA8", "Technical": "#CD7F32", "Historical": "#8B9A9A", "GeoPolitical": "#B24C4C", "Ecological": "#4A7A59", "Sensory": "#7A5C7A" };
         
         let currentDomainFilter = null;
-
-        const data = {
-            nodes: [
-                { id: "Concrete", domains: ["Core"], title: "Portland Cement Concrete", meta: "The Mineral Composite", desc: "Concrete is a mineral composite; it is not one single material, but a mixture of components where cement acts as the binder, while sand and gravel make up most of the volume[cite: 3].", img: "https://images.unsplash.com/photo-1518002171953-a080ee817e1f?auto=format&fit=crop&w=1000&q=80" },
-                { id: "Portland_Cement", domains: ["Scientific", "Technical"], title: "Portland Cement (Binder)", meta: "The Hydraulic Binder", desc: "The powder binder that, when combined with water, initiates a chemical reaction called hydration to bind sand and aggregates[cite: 3].", img: "https://images.unsplash.com/photo-1589939705384-5185137a7f0f?auto=format&fit=crop&w=1000&q=80" },
-                { id: "Limestone", domains: ["Scientific"], title: "Limestone (CaCO₃)", meta: "Primary Calcium Source", desc: "The most important raw material, mainly consisting of calcium carbonate. It is heated and chemically transformed during production[cite: 3].", img: "https://images.unsplash.com/photo-1620646233562-f2a31f137d11?auto=format&fit=crop&w=1000&q=80" },
-                { id: "Hydration", domains: ["Scientific"], title: "Hydration Reactions", meta: "Chemical Curing (Phase 2)", desc: "The chemical reaction triggered when water is added to cement, hardening the paste and binding aggregates into a solid material[cite: 3].", img: "https://images.unsplash.com/photo-1590059345229-37f26fc198ce?auto=format&fit=crop&w=1000&q=80" },
-                { id: "Carbonation", domains: ["Scientific", "Ecological"], title: "Carbonation (Phase 3)", meta: "Environmental Aging", desc: "Over time, Ca(OH)₂ reacts with CO₂ to form CaCO₃ + H₂O. This lowers internal pH and creates vulnerability to chloride-induced depassivation of reinforcing steel[cite: 3].", img: "https://images.unsplash.com/photo-1611273426858-450d8e3c9cce?auto=format&fit=crop&w=1000&q=80" },
-                { id: "Tensile_Weakness", domains: ["Scientific"], title: "Tensile Brittleness", meta: "Mechanical Property", desc: "Concrete provides high compressive strength (20–50 MPa) but very low tensile strength (approx. 10% of compressive capacity), making it brittle and prone to cracking under tension[cite: 3].", img: "https://images.unsplash.com/photo-1517424177579-242550186104?auto=format&fit=crop&w=1000&q=80" },
-                { id: "Quarrying", domains: ["Technical"], title: "Quarrying & Crushing", meta: "Geological Extraction", desc: "Large quarries extract limestone, clay, and sand using heavy machinery; crushers break large rocks down prior to processing[cite: 3].", img: "https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?auto=format&fit=crop&w=1000&q=80" },
-                { id: "Rotary_Kiln", domains: ["Technical", "Historical"], title: "Rotary Kiln (1450°C)", meta: "Calcination Manufacturing (Phase 1)", desc: "Temperatures reach approximately 1450°C, chemically transforming minerals to form clinker. This stage is energy-intensive, requiring 3.2–3.5 GJ of thermal energy per tonne[cite: 3].", img: "https://images.unsplash.com/photo-1504257121735-02ebcb710034?auto=format&fit=crop&w=1000&q=80" },
-                { id: "Clinker", domains: ["Technical"], title: "Clinker", meta: "Intermediate Product", desc: "Small, hard, grey/black stones formed in the kiln; it must be rapidly cooled and ground into an extremely fine powder[cite: 3].", img: "https://images.unsplash.com/photo-1581093588401-fbb62a02f120?auto=format&fit=crop&w=1000&q=80" },
-                { id: "Steel_Rebar", domains: ["Technical", "Scientific"], title: "Steel Reinforcement", meta: "Composite Mechanics", desc: "Resolves concrete's tensile weakness by creating a composite system. Hardening around the steel's ribs creates strong mechanical interlock[cite: 3].", img: "https://images.unsplash.com/photo-1533727763132-75ebff00c3b8?auto=format&fit=crop&w=1000&q=80" },
-                { id: "SCMs", domains: ["Technical", "Ecological"], title: "SCMs (Fly Ash / GGBS)", meta: "Supplementary Cementitious Materials", desc: "Industrial by-products like Ground Granulated Blast-furnace Slag (iron) and Fly Ash (coal) that partially replace clinker to reduce environmental impact[cite: 3].", img: "https://images.unsplash.com/photo-1573164574572-cb89e39749b4?auto=format&fit=crop&w=1000&q=80" },
-                { id: "Aspdin_1824", domains: ["Historical"], title: "Aspdin's Patent (1824)", meta: "Industrial Britain", desc: "Joseph Aspdin patented Portland cement in 1824, emerging within Britain's existing network of mechanized manufacturing and transportation[cite: 3].", img: "https://images.unsplash.com/photo-1580216719601-5264876b5c2a?auto=format&fit=crop&w=1000&q=80" },
-                { id: "Territorial_Control", domains: ["GeoPolitical"], title: "Infrastructures of Control", meta: "Imperial Expansion (1850–1900)", desc: "Cement became connected to the expansion of the industrial state, highly valuable for ports, docks, railways, and military installations to control territories[cite: 3].", img: "https://images.unsplash.com/photo-1586528116311-ad8ed745eb33?auto=format&fit=crop&w=1000&q=80" },
-                { id: "Welfare_State", domains: ["GeoPolitical"], title: "The Developmental State", meta: "Post-WWII Reconstruction (1945–1970s)", desc: "Rapidly driven by reconstruction, concrete suited large social-housing programs and infrastructure capable of being standardized at enormous scales across both capitalist and socialist blocs[cite: 3].", img: "https://images.unsplash.com/photo-1486325212027-8081e485255e?auto=format&fit=crop&w=1000&q=80" },
-                { id: "Multinational_Oligopoly", domains: ["GeoPolitical"], title: "Multinational Corporations", meta: "Privatization (1980s–2000s)", desc: "Previously state-owned cement industries were merged into transnational networks; by 2003, the top five companies controlled ~42% of the global market outside China[cite: 3].", img: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1000&q=80" },
-                { id: "Carbon_Economy", domains: ["GeoPolitical", "Ecological"], title: "Carbon Geopolitics", meta: "Contemporary Challenges", desc: "Because calcination chemically releases CO₂, even decarbonizing fuels won't eliminate emissions, creating a new political economy of carbon taxes and emissions trading[cite: 3].", img: "https://images.unsplash.com/photo-1480796927426-f609979314bd?auto=format&fit=crop&w=1000&q=80" },
-                { id: "Embodied_Carbon", domains: ["Ecological"], title: "Embodied Carbon", meta: "60% of Production CO₂", desc: "The calcination process accounts for about 80% of volume and about 60% of CO₂ emissions[cite: 3].", img: "https://images.unsplash.com/photo-1611273426858-450d8e3c9cce?auto=format&fit=crop&w=1000&q=80" },
-                { id: "Demolition_Waste", domains: ["Ecological"], title: "Demolition Waste", meta: "End of Life", desc: "The biggest end-of-life waste stream is concrete rubble; elements must be separated from contaminants like wood, plastic, and reinforcement steel[cite: 3].", img: "https://images.unsplash.com/photo-1528481488960-98d0aeb8c3fb?auto=format&fit=crop&w=1000&q=80" },
-                { id: "RCA", domains: ["Ecological", "Technical"], title: "Recycled Concrete Aggregate", meta: "Recycling / Downcycling", desc: "Crushed concrete (RCA) can be used as road base or hardcore, but old mortar alters water absorption and strength when incorporated into new concrete[cite: 3].", img: "https://images.unsplash.com/photo-1582236359050-42171121d51a?auto=format&fit=crop&w=1000&q=80" },
-                { id: "Reflectance", domains: ["Sensory"], title: "Visible Reflectance", meta: "Optical Properties", desc: "PCC typically has a grey appearance with indicative visible-light reflectance of ~40% for smooth surfaces. Wetting reduces reflectance, while carbonation can whiten it[cite: 3].", img: "https://images.unsplash.com/photo-1524311583145-d5593bd3502a?auto=format&fit=crop&w=1000&q=80" },
-                { id: "Thermal_Mass", domains: ["Sensory", "Scientific"], title: "Thermal Mass Storage", meta: "Temperature Perception", desc: "Concrete absorbs, stores, and releases heat over time, meaning a surface may feel cool in shade but warm after heating[cite: 3].", img: "https://images.unsplash.com/photo-1560930777-333e76a1ee5d?auto=format&fit=crop&w=1000&q=80" },
-                { id: "Acoustic_Reflectance", domains: ["Sensory"], title: "Acoustic Density", meta: "Sound Insulation", desc: "High material density yields excellent sound insulation and airborne noise reduction, but creates a hard, acoustically reflective surface contributing to reverberation[cite: 3].", img: "https://images.unsplash.com/photo-1587609202029-798c19ee8c4a?auto=format&fit=crop&w=1000&q=80" }
-            ],
-            links: [
-                { source: "Portland_Cement", target: "Concrete", label: "binds into", category: "Systemic Structure" },
-                { source: "Quarrying", target: "Limestone", label: "extracts", category: "Transformation" },
-                { source: "Limestone", target: "Rotary_Kiln", label: "is processed in", category: "Transformation" },
-                { source: "Rotary_Kiln", target: "Clinker", label: "fires into", category: "Transformation" },
-                { source: "Clinker", target: "Portland_Cement", label: "is ground into", category: "Transformation" },
-                { source: "Rotary_Kiln", target: "Embodied_Carbon", label: "chemically releases", category: "Impact" },
-                { source: "Portland_Cement", target: "Hydration", label: "undergoes", category: "Transformation" },
-                { source: "Hydration", target: "Concrete", label: "cures", category: "Transformation" },
-                { source: "Concrete", target: "Carbonation", label: "ages through", category: "Transformation" },
-                { source: "Concrete", target: "Tensile_Weakness", label: "exhibits", category: "Impact" },
-                { source: "Steel_Rebar", target: "Concrete", label: "mechanically reinforces", category: "Systemic Structure" },
-                { source: "Carbonation", target: "Steel_Rebar", label: "depassivates", category: "Impact" },
-                { source: "SCMs", target: "Portland_Cement", label: "partially replaces", category: "Dependency" },
-                { source: "Aspdin_1824", target: "Portland_Cement", label: "invented", category: "Historical Context" },
-                { source: "Rotary_Kiln", target: "Territorial_Control", label: "scaled production for", category: "Dependency" },
-                { source: "Welfare_State", target: "Concrete", label: "mass-deployed", category: "Historical Context" },
-                { source: "Welfare_State", target: "Multinational_Oligopoly", label: "privatized into", category: "Historical Context" },
-                { source: "Multinational_Oligopoly", target: "Quarrying", label: "controls", category: "Dependency" },
-                { source: "Embodied_Carbon", target: "Carbon_Economy", label: "forces", category: "Impact" },
-                { source: "Concrete", target: "Demolition_Waste", label: "ends life as", category: "Systemic Structure" },
-                { source: "Demolition_Waste", target: "RCA", label: "is crushed into", category: "Transformation" },
-                { source: "RCA", target: "Concrete", label: "is downcycled into", category: "Transformation" },
-                { source: "Carbonation", target: "Reflectance", label: "whitens", category: "Impact" },
-                { source: "Concrete", target: "Thermal_Mass", label: "provides", category: "Systemic Structure" },
-                { source: "Concrete", target: "Acoustic_Reflectance", label: "provides", category: "Systemic Structure" }
-            ]
-        };
-
+        let isTimelineMode = false;
+        
         const width = window.innerWidth;
         const height = window.innerHeight;
 
         const zoom = d3.zoom().scaleExtent([0.15, 4]).on("zoom", (event) => {
             g.attr("transform", event.transform);
-            if (event.transform.k > 1.2) {
-                d3.selectAll('.link-label').classed('show-labels', true);
-            } else {
-                d3.selectAll('.link-label').classed('show-labels', false);
-            }
+            d3.selectAll('.link-label').classed('show-labels', event.transform.k > 1.2);
+            if (isTimelineMode) xAxisGroup.attr("transform", `translate(0, ${height/2 + 150})`);
         });
         
         const svg = d3.select("#graph-container").append("svg").attr("width", width).attr("height", height).call(zoom);
         const g = svg.append("g");
         const defs = svg.append("defs");
+        const xAxisGroup = g.append("g").attr("class", "axis").style("opacity", 0);
 
-        // Construct Legend Interface
-        const legendContainer = document.getElementById('legend-items');
-        for (const [domain, color] of Object.entries(domainColors)) {
-            const item = document.createElement('div');
-            item.className = 'legend-item';
-            item.id = 'legend-' + domain;
-            item.onclick = () => toggleDomainFilter(domain);
+        Promise.all([
+            d3.csv("nodes.csv"),
+            d3.csv("links.csv")
+        ]).then(function([rawNodes, rawLinks]) {
             
-            const colorBox = document.createElement('div');
-            colorBox.className = 'legend-color';
-            colorBox.style.background = color;
+            // Map new domain1 and domain2 columns instead of splitting strings
+            const nodes = rawNodes.map(d => {
+                const extractedDomains = [];
+                if (d.domain1 && d.domain1.trim() !== "") extractedDomains.push(d.domain1.trim());
+                if (d.domain2 && d.domain2.trim() !== "") extractedDomains.push(d.domain2.trim());
+
+                return {
+                    id: d.id.trim(),
+                    title: d.title.trim(),
+                    domains: extractedDomains.length > 0 ? extractedDomains : ["Core"],
+                    meta: d.meta,
+                    desc: d.desc,
+                    img: d.img,
+                    year: d.year ? parseInt(d.year) : 2026
+                };
+            });
+
+            const links = rawLinks.map(d => ({
+                source: d.source.trim(),
+                target: d.target.trim(),
+                label: d.label.trim(),
+                category: d.category.trim()
+            }));
+
+            initGraph(nodes, links);
+        }).catch(error => {
+            console.error("Error loading CSV files. Ensure you are running a local server or viewing on GitHub Pages.", error);
+            document.getElementById('graph-container').innerHTML = `<h2 style="color:white; padding:50px;">Error Loading CSVs. <br><br>If testing locally, you must run a local web server (e.g. VSCode Live Server) to fetch files.</h2>`;
+        });
+
+        function initGraph(nodes, links) {
+            const legendContainer = document.getElementById('legend-items');
+            for (const [domain, color] of Object.entries(domainColors)) {
+                const item = document.createElement('div');
+                item.className = 'legend-item';
+                item.id = 'legend-' + domain;
+                item.onclick = () => toggleDomainFilter(domain, nodes, links);
+                item.innerHTML = `<div class="legend-color" style="background:${color}"></div><span>${domain}</span>`;
+                legendContainer.appendChild(item);
+            }
+
+            const degreeMap = {};
+            links.forEach(l => { degreeMap[l.source] = (degreeMap[l.source] || 0) + 1; degreeMap[l.target] = (degreeMap[l.target] || 0) + 1; });
+
+            nodes.forEach(n => {
+                n.size = 10 + ((degreeMap[n.id] || 0) * 2.5);
+                if (n.domains.length > 1) {
+                    const gradId = "grad-" + n.domains.join("");
+                    n.fill = `url(#${gradId})`;
+                    n.fallbackColor = domainColors[n.domains[0]];
+                    if (!document.getElementById(gradId)) {
+                        const grad = defs.append("linearGradient").attr("id", gradId);
+                        n.domains.forEach((d, i) => grad.append("stop").attr("offset", `${(i / (n.domains.length - 1)) * 100}%`).attr("stop-color", domainColors[d] || "#fff"));
+                    }
+                } else {
+                    n.fill = domainColors[n.domains[0]] || "#ffffff";
+                    n.fallbackColor = n.fill;
+                }
+            });
+
+            window.simulation = d3.forceSimulation(nodes)
+                .force("link", d3.forceLink(links).id(d => d.id).distance(240))
+                .force("charge", d3.forceManyBody().strength(-2000))
+                .force("center", d3.forceCenter(width / 2, height / 2))
+                .force("collide", d3.forceCollide().radius(d => d.size * 1.5 + 25));
+
+            const linkPaths = g.append("g").selectAll("path").data(links).join("path").attr("class", "link-line").attr("stroke-width", 1.5);
+            const linkTexts = g.append("g").selectAll("text").data(links).join("text").attr("class", "link-label").text(d => d.label);
+
+            const nodeGroups = g.append("g").selectAll("g").data(nodes).join("g").attr("class", "node graph-element")
+                .call(d3.drag().on("start", dragstart).on("drag", dragged).on("end", dragend))
+                .on("click", (e, d) => handleNodeClick(d, nodes, links, linkPaths, linkTexts, nodeGroups))
+                .on("mouseover", (e, d) => handleNodeHover(d, links, nodeGroups, linkPaths, linkTexts))
+                .on("mouseout", () => handleNodeOut(nodeGroups, linkPaths, linkTexts));
+
+            nodeGroups.append("circle").attr("class", "node-circle").attr("r", d => d.size)
+                .attr("fill", d => d.fill).attr("stroke", d => d.fill.includes("url") ? "#ffffff" : d.fill).attr("stroke-width", d => d.domains.includes("Core") ? 0 : 1.5);
+            nodeGroups.append("text").attr("class", "node-label").attr("dx", d => d.size + 12).attr("dy", 5).text(d => d.title);
+
+            simulation.on("tick", () => {
+                linkPaths.attr("d", d => `M${d.source.x},${d.source.y} L${d.target.x},${d.target.y}`);
+                linkTexts.attr("x", d => (d.source.x + d.target.x) / 2).attr("y", d => (d.source.y + d.target.y) / 2 - 6)
+                    .attr("transform", d => {
+                        const angle = Math.atan2(d.target.y - d.source.y, d.target.x - d.source.x) * 180 / Math.PI;
+                        return `rotate(${angle > 90 || angle < -90 ? angle + 180 : angle}, ${(d.source.x + d.target.x) / 2}, ${(d.source.y + d.target.y) / 2})`;
+                    });
+                nodeGroups.attr("transform", d => `translate(${d.x},${d.y})`);
+            });
+
+            const xScale = d3.scaleLinear().domain([1800, 2030]).range([-width, width * 2]);
+            const xAxis = d3.axisBottom(xScale).tickFormat(d3.format("d")).ticks(10);
+            xAxisGroup.call(xAxis);
+
+            document.getElementById('timelineToggle').addEventListener('click', function() {
+                isTimelineMode = !isTimelineMode;
+                this.innerText = isTimelineMode ? "View Network Matrix" : "View Chronology";
+                
+                if (isTimelineMode) {
+                    xAxisGroup.transition().duration(1000).style("opacity", 1);
+                    simulation
+                        .force("x", d3.forceX(d => xScale(d.year)).strength(1))
+                        .force("y", d3.forceY(height / 2).strength(0.1))
+                        .force("center", null)
+                        .alpha(1).restart();
+                    svg.transition().duration(1000).call(zoom.transform, d3.zoomIdentity.translate(width/2, height/2).scale(0.4).translate(-width/2, -height/2));
+                } else {
+                    xAxisGroup.transition().duration(1000).style("opacity", 0);
+                    simulation
+                        .force("x", null).force("y", null)
+                        .force("center", d3.forceCenter(width / 2, height / 2))
+                        .alpha(1).restart();
+                }
+            });
+
+            svg.call(zoom.transform, d3.zoomIdentity.translate(width / 2, height / 2).scale(0.55).translate(-width/2, -height/2));
             
-            const text = document.createElement('span');
-            text.innerText = domain;
-            
-            item.appendChild(colorBox);
-            item.appendChild(text);
-            legendContainer.appendChild(item);
+            window.jumpToNodeUI = (nodeId) => {
+                const target = nodes.find(n => n.id === nodeId);
+                if(target) handleNodeClick(target, nodes, links, linkPaths, linkTexts, nodeGroups);
+            };
         }
 
-        const degreeMap = {};
-        data.links.forEach(l => {
-            degreeMap[l.source] = (degreeMap[l.source] || 0) + 1;
-            degreeMap[l.target] = (degreeMap[l.target] || 0) + 1;
-        });
+        function dragstart(e, d) { if (!e.active) simulation.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; }
+        function dragged(e, d) { d.fx = e.x; d.fy = e.y; }
+        function dragend(e, d) { if (!e.active) simulation.alphaTarget(0); d.fx = null; d.fy = null; }
 
-        const generatedGrads = new Set();
-
-        data.nodes.forEach(n => {
-            const deg = degreeMap[n.id] || 0;
-            n.size = 10 + (deg * 2.5);
-
-            if (n.domains.length > 1) {
-                const gradId = "grad-" + n.domains.join("-").replace(/\s/g, '');
-                n.fill = `url(#${gradId})`;
-                n.fallbackColor = domainColors[n.domains[0]];
-                
-                if (!generatedGrads.has(gradId)) {
-                    generatedGrads.add(gradId);
-                    const grad = defs.append("linearGradient").attr("id", gradId).attr("x1", "0%").attr("y1", "0%").attr("x2", "100%").attr("y2", "100%");
-                    n.domains.forEach((d, i) => {
-                        grad.append("stop")
-                            .attr("offset", `${(i / (n.domains.length - 1)) * 100}%`)
-                            .attr("stop-color", domainColors[d] || "#fff");
-                    });
-                }
-            } else {
-                n.fill = domainColors[n.domains[0]] || "#ffffff";
-                n.fallbackColor = n.fill;
-            }
-        });
-
-        const simulation = d3.forceSimulation(data.nodes)
-            .force("link", d3.forceLink(data.links).id(d => d.id).distance(240))
-            .force("charge", d3.forceManyBody().strength(-2000))
-            .force("center", d3.forceCenter(width / 2, height / 2))
-            .force("collide", d3.forceCollide().radius(d => d.size * 1.5 + 25));
-
-        const link = g.append("g").selectAll("path").data(data.links).join("path")
-            .attr("class", "link-line graph-element")
-            .attr("stroke-width", 1.5);
-            
-        const linkText = g.append("g").selectAll("text").data(data.links).join("text")
-            .attr("class", "link-label graph-element")
-            .text(d => d.label);
-
-        const node = g.append("g").selectAll("g").data(data.nodes).join("g").attr("class", "node graph-element")
-            .call(d3.drag()
-                .on("start", (e, d) => { if (!e.active) simulation.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; })
-                .on("drag", (e, d) => { d.fx = e.x; d.fy = e.y; })
-                .on("end", (e, d) => { if (!e.active) simulation.alphaTarget(0); d.fx = null; d.fy = null; }))
-            .on("click", handleNodeClick)
-            .on("mouseover", handleNodeHover)
-            .on("mouseout", handleNodeOut);
-
-        node.append("circle")
-            .attr("class", "node-circle")
-            .attr("r", d => d.size)
-            .attr("fill", d => d.fill)
-            .attr("stroke", d => d.fill.includes("url") ? "#ffffff" : d.fill)
-            .attr("stroke-width", d => d.domains.includes("Core") ? 0 : 1.5);
-
-        node.append("text").attr("class", "node-label").attr("dx", d => d.size + 12).attr("dy", 5).text(d => d.title);
-
-        simulation.on("tick", () => {
-            link.attr("d", d => `M${d.source.x},${d.source.y} L${d.target.x},${d.target.y}`);
-            linkText.attr("x", d => (d.source.x + d.target.x) / 2).attr("y", d => (d.source.y + d.target.y) / 2 - 6)
-                .attr("transform", d => {
-                    const angle = Math.atan2(d.target.y - d.source.y, d.target.x - d.source.x) * 180 / Math.PI;
-                    const x = (d.source.x + d.target.x) / 2;
-                    const y = (d.source.y + d.target.y) / 2;
-                    return `rotate(${angle > 90 || angle < -90 ? angle + 180 : angle}, ${x}, ${y})`;
-                });
-            node.attr("transform", d => `translate(${d.x},${d.y})`);
-        });
-
-        // Filter functionality for the Legend UI
-        function toggleDomainFilter(domain) {
+        function toggleDomainFilter(domain, nodes, links) {
             document.getElementById('detail-panel').classList.remove('active');
-
             if (currentDomainFilter === domain) {
                 currentDomainFilter = null;
                 d3.selectAll('.legend-item').classed('active', false);
-                d3.selectAll('.graph-element').classed('dimmed', false).classed('highlighted', false).classed('highlighted-link', false);
-                d3.selectAll('.link-label').classed('show-labels', false);
-                svg.transition().duration(1000).call(zoom.transform, d3.zoomIdentity.translate(width / 2, height / 2).scale(0.55).translate(-width/2, -height/2));
+                d3.selectAll('.graph-element').classed('dimmed', false).classed('highlighted', false);
             } else {
                 currentDomainFilter = domain;
                 d3.selectAll('.legend-item').classed('active', false);
                 document.getElementById('legend-' + domain).classList.add('active');
-
-                d3.selectAll('.graph-element').classed('dimmed', true).classed('highlighted', false).classed('highlighted-link', false);
-                d3.selectAll('.link-label').classed('show-labels', false);
                 
-                // Highlight nodes inside the selected domain
-                node.filter(n => n.domains.includes(domain)).classed('dimmed', false).classed('highlighted', true);
+                d3.selectAll('.graph-element').classed('dimmed', true).classed('highlighted', false);
+                d3.selectAll('.node').filter(n => n.domains.includes(domain)).classed('dimmed', false).classed('highlighted', true);
+                d3.selectAll('.link-line').filter(l => l.source.domains.includes(domain) && l.target.domains.includes(domain)).classed('dimmed', false);
                 
-                // Highlight links where both ends exist within the chosen domain framework
-                link.filter(l => l.source.domains.includes(domain) && l.target.domains.includes(domain)).classed('dimmed', false).classed('highlighted-link', true);
-                linkText.filter(l => l.source.domains.includes(domain) && l.target.domains.includes(domain)).classed('dimmed', false).classed('show-labels', true);
-
-                // Autonomously frame the isolated domain cluster
-                const domainNodes = data.nodes.filter(n => n.domains.includes(domain));
+                const domainNodes = nodes.filter(n => n.domains.includes(domain));
                 if (domainNodes.length > 0) {
-                    const minX = d3.min(domainNodes, d => d.x);
-                    const maxX = d3.max(domainNodes, d => d.x);
-                    const minY = d3.min(domainNodes, d => d.y);
-                    const maxY = d3.max(domainNodes, d => d.y);
-
-                    const cx = (minX + maxX) / 2;
-                    const cy = (minY + maxY) / 2;
-                    const dx = Math.max(maxX - minX, 200); 
-                    const dy = Math.max(maxY - minY, 200);
-
-                    const scale = Math.max(0.4, Math.min(1.8, 0.7 / Math.max(dx / width, dy / height)));
-                    
-                    svg.transition().duration(1000).call(zoom.transform, d3.zoomIdentity.translate(width / 2, height / 2).scale(scale).translate(-cx, -cy));
+                    const cx = (d3.min(domainNodes, d => d.x) + d3.max(domainNodes, d => d.x)) / 2;
+                    const cy = (d3.min(domainNodes, d => d.y) + d3.max(domainNodes, d => d.y)) / 2;
+                    svg.transition().duration(1000).call(zoom.transform, d3.zoomIdentity.translate(width/2, height/2).scale(0.8).translate(-cx, -cy));
                 }
             }
         }
 
-        function handleNodeHover(event, d) {
-            if (document.getElementById('detail-panel').classList.contains('active')) return;
-            if (currentDomainFilter) return; // Prevent local hover state from overwriting macro filters
-            
-            const connectedLinks = data.links.filter(l => l.source.id === d.id || l.target.id === d.id);
+        function handleNodeHover(d, links, nodeGroups, linkPaths, linkTexts) {
+            if (document.getElementById('detail-panel').classList.contains('active') || currentDomainFilter) return;
+            const connectedLinks = links.filter(l => l.source.id === d.id || l.target.id === d.id);
             const connectedNodes = [d.id, ...connectedLinks.map(l => l.source.id === d.id ? l.target.id : l.source.id)];
             
-            d3.selectAll('.graph-element').classed('dimmed', true);
-            node.filter(n => connectedNodes.includes(n.id)).classed('dimmed', false);
-            link.filter(l => connectedLinks.includes(l)).classed('dimmed', false).classed('highlighted-link', true);
-            linkText.filter(l => connectedLinks.includes(l)).classed('dimmed', false).classed('show-labels', true);
+            nodeGroups.classed('dimmed', n => !connectedNodes.includes(n.id));
+            linkPaths.classed('dimmed', true); linkTexts.classed('show-labels', false);
+            linkPaths.filter(l => connectedLinks.includes(l)).classed('dimmed', false).classed('highlighted-link', true);
+            linkTexts.filter(l => connectedLinks.includes(l)).classed('show-labels', true);
         }
 
-        function handleNodeOut() {
-            if (document.getElementById('detail-panel').classList.contains('active')) return;
-            if (currentDomainFilter) return;
-            
-            d3.selectAll('.graph-element').classed('dimmed', false).classed('highlighted-link', false);
-            
-            const currentZoom = d3.zoomTransform(svg.node()).k;
-            if (currentZoom <= 1.2) {
-                d3.selectAll('.link-label').classed('show-labels', false);
-            }
+        function handleNodeOut(nodeGroups, linkPaths, linkTexts) {
+            if (document.getElementById('detail-panel').classList.contains('active') || currentDomainFilter) return;
+            nodeGroups.classed('dimmed', false);
+            linkPaths.classed('dimmed', false).classed('highlighted-link', false);
+            if (d3.zoomTransform(svg.node()).k <= 1.2) linkTexts.classed('show-labels', false);
         }
 
-        // Dynamically build a RegExp object to strip citation markers from UI text
-        const citeCleaner = new RegExp("\\[c" + "ite: \\d+\\]", "g");
+        function handleNodeClick(d, nodes, links, linkPaths, linkTexts, nodeGroups) {
+            currentDomainFilter = null; d3.selectAll('.legend-item').classed('active', false);
+            svg.transition().duration(1000).call(zoom.transform, d3.zoomIdentity.translate(width/4, height/2).scale(1.2).translate(-d.x, -d.y));
 
-        function handleNodeClick(event, d) {
-            currentDomainFilter = null; // Clear macro filter on explicit node select
-            d3.selectAll('.legend-item').classed('active', false);
-
-            svg.transition().duration(1000).call(zoom.transform, d3.zoomIdentity.translate(width / 4, height / 2).scale(1.2).translate(-d.x, -d.y));
-
-            const connectedLinks = data.links.filter(l => l.source.id === d.id || l.target.id === d.id);
+            const connectedLinks = links.filter(l => l.source.id === d.id || l.target.id === d.id);
             const connectedNodes = [d.id, ...connectedLinks.map(l => l.source.id === d.id ? l.target.id : l.source.id)];
 
-            d3.selectAll('.graph-element').classed('dimmed', true).classed('highlighted', false).classed('highlighted-link', false);
-            node.filter(n => connectedNodes.includes(n.id)).classed('dimmed', false).classed('highlighted', true);
-            link.filter(l => connectedLinks.includes(l)).classed('dimmed', false).classed('highlighted-link', true);
-            linkText.filter(l => connectedLinks.includes(l)).classed('dimmed', false).classed('show-labels', true);
+            nodeGroups.classed('dimmed', n => !connectedNodes.includes(n.id));
+            linkPaths.classed('dimmed', true).classed('highlighted-link', false);
+            linkPaths.filter(l => connectedLinks.includes(l)).classed('dimmed', false).classed('highlighted-link', true);
+            linkTexts.filter(l => connectedLinks.includes(l)).classed('show-labels', true);
 
-            const tagContainer = document.getElementById('panel-domain-container');
-            tagContainer.innerHTML = "";
-            d.domains.forEach(domain => {
-                tagContainer.innerHTML += `<div class="domain-tag" style="background: ${domainColors[domain]}33; border-color: ${domainColors[domain]}">${domain}</div>`;
-            });
-
+            document.getElementById('panel-domain-container').innerHTML = d.domains.map(dom => `<div class="domain-tag" style="background:${domainColors[dom]}33; border-color:${domainColors[dom]}">${dom}</div>`).join('');
             document.getElementById('panel-title').innerText = d.title;
             document.getElementById('panel-meta').innerText = d.meta;
             document.getElementById('panel-img').src = d.img;
-            
-            // Execute the dynamic cleanup on the node description
-            document.getElementById('panel-desc').innerHTML = d.desc.replace(citeCleaner, '');
+            document.getElementById('panel-desc').innerHTML = d.desc.replace(new RegExp("\\[c" + "ite: \\d+\\]", "g"), '');
 
-            const listEl = document.getElementById('panel-links');
-            listEl.innerHTML = "";
-            
             const groupedLinks = {};
-            connectedLinks.forEach(l => {
-                if (!groupedLinks[l.category]) groupedLinks[l.category] = [];
-                groupedLinks[l.category].push(l);
-            });
+            connectedLinks.forEach(l => { (groupedLinks[l.category] = groupedLinks[l.category] || []).push(l); });
 
-            for (const [category, links] of Object.entries(groupedLinks)) {
-                listEl.innerHTML += `<div class="category-header">${category}</div>`;
-                links.forEach(l => {
-                    const sourceNode = l.source;
-                    const targetNode = l.target;
-                    const relationVerb = l.label;
-                    
-                    listEl.innerHTML += `
-                    <div class="interdependency-sentence">
-                        <span class="node-link" style="color: ${sourceNode.fallbackColor}" onclick="document.dispatchEvent(new CustomEvent('jumpToNode', {detail: '${sourceNode.id}'}))">${sourceNode.title}</span> 
-                        <span class="verb-text">${relationVerb}</span> 
-                        <span class="node-link" style="color: ${targetNode.fallbackColor}" onclick="document.dispatchEvent(new CustomEvent('jumpToNode', {detail: '${targetNode.id}'}))">${targetNode.title}</span>.
-                    </div>`;
+            let linksHTML = "";
+            for (const [category, arr] of Object.entries(groupedLinks)) {
+                linksHTML += `<div class="category-header">${category}</div>`;
+                arr.forEach(l => {
+                    const isSrc = l.source.id === d.id;
+                    const related = isSrc ? l.target : l.source;
+                    linksHTML += `<div class="interdependency-sentence"><span class="node-link" style="color:${d.fallbackColor}" onclick="window.jumpToNodeUI('${related.id}')">${d.title}</span> <span class="verb-text">${isSrc ? l.label : "is "+l.label+" by"}</span> <span class="node-link" style="color:${related.fallbackColor}" onclick="window.jumpToNodeUI('${related.id}')">${related.title}</span>.</div>`;
                 });
             }
-
+            document.getElementById('panel-links').innerHTML = linksHTML;
             document.getElementById('detail-panel').classList.add('active');
         }
 
-        document.addEventListener('jumpToNode', function(e) {
-            const targetNode = data.nodes.find(n => n.id === e.detail);
-            if(targetNode) handleNodeClick(null, targetNode);
-        });
-
         function resetGraph() {
-            currentDomainFilter = null;
-            d3.selectAll('.legend-item').classed('active', false);
             document.getElementById('detail-panel').classList.remove('active');
             d3.selectAll('.graph-element').classed('dimmed', false).classed('highlighted', false).classed('highlighted-link', false);
-            svg.transition().duration(1000).call(zoom.transform, d3.zoomIdentity.translate(width / 2, height / 2).scale(0.55).translate(-width/2, -height/2));
+            svg.transition().duration(1000).call(zoom.transform, d3.zoomIdentity.translate(width/2, height/2).scale(0.55).translate(-width/2, -height/2));
             d3.selectAll('.link-label').classed('show-labels', false);
         }
-        
-        svg.call(zoom.transform, d3.zoomIdentity.translate(width / 2, height / 2).scale(0.55).translate(-width/2, -height/2));
     </script>
 </body>
 </html>
