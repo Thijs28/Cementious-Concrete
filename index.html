@@ -55,7 +55,8 @@
         .category-header { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1.5px; color: #6a737d; border-bottom: 1px solid #1f2229; padding-bottom: 5px; margin: 25px 0 15px 0; }
         .interdependency-sentence { background: rgba(255,255,255,0.02); border: 1px solid #1f2229; padding: 18px; border-radius: 6px; margin-bottom: 12px; font-size: 1.05rem; line-height: 1.6; color: #a0a5ab; transition: background 0.2s; }
         .interdependency-sentence:hover { background: rgba(255,255,255,0.04); border-color: #3b4048; }
-        .node-link { font-weight: 600; cursor: pointer; border-bottom: 1px dashed rgba(255,255,255,0.3); padding-bottom: 2px; }
+        .node-link { font-weight: 600; cursor: pointer; border-bottom: 1px dashed rgba(255,255,255,0.3); padding-bottom: 2px; transition: color 0.2s; }
+        .node-link:hover { opacity: 0.7; }
         .verb-text { font-style: italic; margin: 0 4px; color: #7a8288; }
     </style>
 </head>
@@ -104,44 +105,56 @@
         const defs = svg.append("defs");
         const xAxisGroup = g.append("g").attr("class", "axis").style("opacity", 0);
 
+        // Helper function to strip out invisible BOM characters from CSV headers
+        const cleanCSVKeys = (obj) => {
+            const cleanObj = {};
+            for (let key in obj) {
+                const safeKey = key.replace(/^\uFEFF/, '').trim();
+                cleanObj[safeKey] = obj[key];
+            }
+            return cleanObj;
+        };
+
         Promise.all([
             d3.csv("nodes.csv"),
             d3.csv("links.csv")
         ]).then(function([rawNodes, rawLinks]) {
             
-            // Bulletproof data parsing: handles missing cells, trailing spaces, and alternate column names
-            const nodes = rawNodes.map(d => {
+            const nodes = rawNodes.map(cleanCSVKeys).map(d => {
                 const extractedDomains = [];
                 if (d.domain1 && d.domain1.trim() !== "") extractedDomains.push(d.domain1.trim());
                 if (d.domain2 && d.domain2.trim() !== "") extractedDomains.push(d.domain2.trim());
                 
-                // Fallback in case the user kept the original 'domains' column name
+                // Fallback just in case the header is still named 'domains'
                 if (extractedDomains.length === 0 && d.domains && d.domains.trim() !== "") {
                     d.domains.split("|").forEach(dom => extractedDomains.push(dom.trim()));
                 }
 
                 return {
-                    id: (d.id || "").trim(),
-                    title: (d.title || d.id || "Unnamed Node").trim(),
+                    id: (d.id || d.ID || "").trim(),
+                    title: (d.title || d.Title || d.id || "Unnamed Node").trim(),
                     domains: extractedDomains.length > 0 ? extractedDomains : ["Core"],
                     meta: (d.meta || d.Meta || "").trim(),
                     desc: (d.desc || d.Description || d.description || "").trim(),
-                    img: (d.img || d.Image || "").trim(),
+                    img: (d.img || d.Image || d.image || "").trim(),
                     year: (d.year && d.year.trim() !== "") ? parseInt(d.year) : null
                 };
-            }).filter(n => n.id !== ""); // Strip completely empty rows
+            }).filter(n => n.id !== ""); // Removes completely empty rows safely
 
-            const links = rawLinks.map(d => ({
-                source: (d.source || "").trim(),
-                target: (d.target || "").trim(),
-                label: (d.label || "relates to").trim(),
-                category: (d.category || "General").trim()
-            })).filter(l => l.source !== "" && l.target !== "");
+            // Extract valid IDs to verify links
+            const validNodeIds = new Set(nodes.map(n => n.id));
+
+            const links = rawLinks.map(cleanCSVKeys).map(d => ({
+                source: (d.source || d.Source || "").trim(),
+                target: (d.target || d.Target || "").trim(),
+                label: (d.label || d.Label || "relates to").trim(),
+                category: (d.category || d.Category || "General").trim()
+            })).filter(l => validNodeIds.has(l.source) && validNodeIds.has(l.target)); // Prevents crashing from typos
 
             initGraph(nodes, links);
         }).catch(error => {
-            console.error("Error loading CSV files.", error);
-            document.getElementById('graph-container').innerHTML = `<h2 style="color:white; padding:50px;">Error Loading CSVs. <br><br>If testing locally, you must run a local web server (e.g. VSCode Live Server).</h2>`;
+            console.error("Error loading CSV files:", error);
+            document.getElementById('graph-container').innerHTML = `<h2 style="color:white; padding:50px;">Error Loading CSVs. Check console for details.</h2>`;
         });
 
         function initGraph(nodes, links) {
@@ -156,7 +169,10 @@
             }
 
             const degreeMap = {};
-            links.forEach(l => { degreeMap[l.source] = (degreeMap[l.source] || 0) + 1; degreeMap[l.target] = (degreeMap[l.target] || 0) + 1; });
+            links.forEach(l => { 
+                degreeMap[l.source] = (degreeMap[l.source] || 0) + 1; 
+                degreeMap[l.target] = (degreeMap[l.target] || 0) + 1; 
+            });
 
             nodes.forEach(n => {
                 n.size = 10 + ((degreeMap[n.id] || 0) * 2.5);
@@ -238,6 +254,7 @@
 
             svg.call(zoom.transform, d3.zoomIdentity.translate(width / 2, height / 2).scale(0.55).translate(-width/2, -height/2));
             
+            // Exposes the click handler to the HTML string generated inside the panel
             window.jumpToNodeUI = (nodeId) => {
                 const target = nodes.find(n => n.id === nodeId);
                 if(target) handleNodeClick(target, nodes, links, linkPaths, linkTexts, nodeGroups);
@@ -290,57 +307,64 @@
             if (d3.zoomTransform(svg.node()).k <= 1.2) linkTexts.classed('show-labels', false);
         }
 
-        // Global RegExp to clean citation tags
-        const citeCleaner = new RegExp("\\[c" + "ite: \\d+\\]", "g");
+        const citeCleaner = new RegExp("\\[c" + "ite:\\s*\\d+\\]", "gi");
 
         function handleNodeClick(d, nodes, links, linkPaths, linkTexts, nodeGroups) {
-            currentDomainFilter = null; d3.selectAll('.legend-item').classed('active', false);
-            svg.transition().duration(1000).call(zoom.transform, d3.zoomIdentity.translate(width/4, height/2).scale(1.2).translate(-d.x, -d.y));
+            try {
+                currentDomainFilter = null; d3.selectAll('.legend-item').classed('active', false);
+                svg.transition().duration(1000).call(zoom.transform, d3.zoomIdentity.translate(width/4, height/2).scale(1.2).translate(-d.x, -d.y));
 
-            const connectedLinks = links.filter(l => l.source.id === d.id || l.target.id === d.id);
-            const connectedNodes = [d.id, ...connectedLinks.map(l => l.source.id === d.id ? l.target.id : l.source.id)];
+                const connectedLinks = links.filter(l => l.source.id === d.id || l.target.id === d.id);
+                const connectedNodes = [d.id, ...connectedLinks.map(l => l.source.id === d.id ? l.target.id : l.source.id)];
 
-            nodeGroups.classed('dimmed', n => !connectedNodes.includes(n.id));
-            linkPaths.classed('dimmed', true).classed('highlighted-link', false);
-            linkPaths.filter(l => connectedLinks.includes(l)).classed('dimmed', false).classed('highlighted-link', true);
-            linkTexts.filter(l => connectedLinks.includes(l) && !d3.select(l).classed('hidden-timeline')).classed('show-labels', true);
+                nodeGroups.classed('dimmed', n => !connectedNodes.includes(n.id));
+                linkPaths.classed('dimmed', true).classed('highlighted-link', false);
+                linkPaths.filter(l => connectedLinks.includes(l)).classed('dimmed', false).classed('highlighted-link', true);
+                linkTexts.filter(l => connectedLinks.includes(l) && !d3.select(l).classed('hidden-timeline')).classed('show-labels', true);
 
-            // Bulletproof Content Injection
-            document.getElementById('panel-domain-container').innerHTML = d.domains.map(dom => `<div class="domain-tag" style="background:${domainColors[dom] || '#ffffff'}33; border-color:${domainColors[dom] || '#ffffff'}">${dom}</div>`).join('');
-            document.getElementById('panel-title').innerText = d.title;
-            document.getElementById('panel-meta').innerText = d.meta;
-            document.getElementById('panel-desc').innerHTML = d.desc.replace(citeCleaner, '');
-            
-            // Handle image logic seamlessly if blank
-            const mediaContainer = document.getElementById('panel-media');
-            if (d.img && d.img !== "") {
-                document.getElementById('panel-img').src = d.img;
-                mediaContainer.classList.add('active');
-            } else {
-                mediaContainer.classList.remove('active');
-            }
+                document.getElementById('panel-domain-container').innerHTML = d.domains.map(dom => `<div class="domain-tag" style="background:${domainColors[dom] || '#ffffff'}33; border-color:${domainColors[dom] || '#ffffff'}">${dom}</div>`).join('');
+                document.getElementById('panel-title').innerText = d.title;
+                document.getElementById('panel-meta').innerText = d.meta;
+                document.getElementById('panel-desc').innerHTML = d.desc.replace(citeCleaner, '');
+                
+                const mediaContainer = document.getElementById('panel-media');
+                if (d.img && d.img !== "") {
+                    document.getElementById('panel-img').src = d.img;
+                    mediaContainer.classList.add('active');
+                } else {
+                    mediaContainer.classList.remove('active');
+                }
 
-            const groupedLinks = {};
-            connectedLinks.forEach(l => { (groupedLinks[l.category || "General"] = groupedLinks[l.category || "General"] || []).push(l); });
-
-            let linksHTML = "";
-            for (const [category, arr] of Object.entries(groupedLinks)) {
-                linksHTML += `<div class="category-header">${category}</div>`;
-                arr.forEach(l => {
-                    const isSrc = l.source.id === d.id;
-                    const related = isSrc ? l.target : l.source;
-                    
-                    // The first span references d.id (so it jumps to itself if desired), the second to related.id
-                    linksHTML += `
-                    <div class="interdependency-sentence">
-                        <span class="node-link" style="color:${d.fallbackColor}" onclick="window.jumpToNodeUI('${d.id}')">${d.title}</span> 
-                        <span class="verb-text">${isSrc ? l.label : "is "+l.label+" by"}</span> 
-                        <span class="node-link" style="color:${related.fallbackColor}" onclick="window.jumpToNodeUI('${related.id}')">${related.title}</span>.
-                    </div>`;
+                const groupedLinks = {};
+                connectedLinks.forEach(l => { 
+                    const cat = l.category || "General";
+                    (groupedLinks[cat] = groupedLinks[cat] || []).push(l); 
                 });
+
+                let linksHTML = "";
+                for (const [category, arr] of Object.entries(groupedLinks)) {
+                    linksHTML += `<div class="category-header">${category}</div>`;
+                    arr.forEach(l => {
+                        const isSrc = l.source.id === d.id;
+                        const related = isSrc ? l.target : l.source;
+                        
+                        // Safety check in case the relationship mapping fails
+                        if(!related || !related.id) return;
+                        
+                        linksHTML += `
+                        <div class="interdependency-sentence">
+                            <span class="node-link" style="color:${d.fallbackColor}" onclick="window.jumpToNodeUI('${d.id}')">${d.title}</span> 
+                            <span class="verb-text">${isSrc ? l.label : "is "+l.label+" by"}</span> 
+                            <span class="node-link" style="color:${related.fallbackColor}" onclick="window.jumpToNodeUI('${related.id}')">${related.title}</span>.
+                        </div>`;
+                    });
+                }
+                document.getElementById('panel-links').innerHTML = linksHTML;
+                document.getElementById('detail-panel').classList.add('active');
+                
+            } catch(e) {
+                console.error("Sidebar encountered an error:", e);
             }
-            document.getElementById('panel-links').innerHTML = linksHTML;
-            document.getElementById('detail-panel').classList.add('active');
         }
 
         function resetGraph() {
