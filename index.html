@@ -105,7 +105,6 @@
         const defs = svg.append("defs");
         const xAxisGroup = g.append("g").attr("class", "axis").style("opacity", 0);
 
-        // Helper function to strip out invisible BOM characters from CSV headers
         const cleanCSVKeys = (obj) => {
             const cleanObj = {};
             for (let key in obj) {
@@ -125,7 +124,6 @@
                 if (d.domain1 && d.domain1.trim() !== "") extractedDomains.push(d.domain1.trim());
                 if (d.domain2 && d.domain2.trim() !== "") extractedDomains.push(d.domain2.trim());
                 
-                // Fallback just in case the header is still named 'domains'
                 if (extractedDomains.length === 0 && d.domains && d.domains.trim() !== "") {
                     d.domains.split("|").forEach(dom => extractedDomains.push(dom.trim()));
                 }
@@ -139,9 +137,8 @@
                     img: (d.img || d.Image || d.image || "").trim(),
                     year: (d.year && d.year.trim() !== "") ? parseInt(d.year) : null
                 };
-            }).filter(n => n.id !== ""); // Removes completely empty rows safely
+            }).filter(n => n.id !== "");
 
-            // Extract valid IDs to verify links
             const validNodeIds = new Set(nodes.map(n => n.id));
 
             const links = rawLinks.map(cleanCSVKeys).map(d => ({
@@ -149,7 +146,7 @@
                 target: (d.target || d.Target || "").trim(),
                 label: (d.label || d.Label || "relates to").trim(),
                 category: (d.category || d.Category || "General").trim()
-            })).filter(l => validNodeIds.has(l.source) && validNodeIds.has(l.target)); // Prevents crashing from typos
+            })).filter(l => validNodeIds.has(l.source) && validNodeIds.has(l.target));
 
             initGraph(nodes, links);
         }).catch(error => {
@@ -254,7 +251,6 @@
 
             svg.call(zoom.transform, d3.zoomIdentity.translate(width / 2, height / 2).scale(0.55).translate(-width/2, -height/2));
             
-            // Exposes the click handler to the HTML string generated inside the panel
             window.jumpToNodeUI = (nodeId) => {
                 const target = nodes.find(n => n.id === nodeId);
                 if(target) handleNodeClick(target, nodes, links, linkPaths, linkTexts, nodeGroups);
@@ -297,7 +293,9 @@
             nodeGroups.classed('dimmed', n => !connectedNodes.includes(n.id));
             linkPaths.classed('dimmed', true); linkTexts.classed('show-labels', false);
             linkPaths.filter(l => connectedLinks.includes(l)).classed('dimmed', false).classed('highlighted-link', true);
-            linkTexts.filter(l => connectedLinks.includes(l) && !d3.select(l).classed('hidden-timeline')).classed('show-labels', true);
+            
+            const isHidden = (l) => isTimelineMode && (l.source.year === null || l.target.year === null);
+            linkTexts.filter(l => connectedLinks.includes(l) && !isHidden(l)).classed('show-labels', true);
         }
 
         function handleNodeOut(nodeGroups, linkPaths, linkTexts) {
@@ -320,7 +318,9 @@
                 nodeGroups.classed('dimmed', n => !connectedNodes.includes(n.id));
                 linkPaths.classed('dimmed', true).classed('highlighted-link', false);
                 linkPaths.filter(l => connectedLinks.includes(l)).classed('dimmed', false).classed('highlighted-link', true);
-                linkTexts.filter(l => connectedLinks.includes(l) && !d3.select(l).classed('hidden-timeline')).classed('show-labels', true);
+                
+                const isHidden = (l) => isTimelineMode && (l.source.year === null || l.target.year === null);
+                linkTexts.filter(l => connectedLinks.includes(l) && !isHidden(l)).classed('show-labels', true);
 
                 document.getElementById('panel-domain-container').innerHTML = d.domains.map(dom => `<div class="domain-tag" style="background:${domainColors[dom] || '#ffffff'}33; border-color:${domainColors[dom] || '#ffffff'}">${dom}</div>`).join('');
                 document.getElementById('panel-title').innerText = d.title;
@@ -348,7 +348,6 @@
                         const isSrc = l.source.id === d.id;
                         const related = isSrc ? l.target : l.source;
                         
-                        // Safety check in case the relationship mapping fails
                         if(!related || !related.id) return;
                         
                         linksHTML += `
