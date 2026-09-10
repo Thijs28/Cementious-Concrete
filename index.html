@@ -21,8 +21,6 @@
         .dimmed { opacity: 0.04 !important; transition: opacity 0.4s ease; filter: grayscale(100%); pointer-events: none; }
         .highlighted { opacity: 1 !important; transition: opacity 0.4s ease; }
         .highlighted-link { stroke: #666 !important; stroke-opacity: 0.9 !important; stroke-width: 1.5px !important; }
-        
-        /* New class to smoothly hide undated nodes during timeline view */
         .hidden-timeline { opacity: 0 !important; pointer-events: none !important; transition: opacity 0.5s ease; }
         
         .axis line, .axis path { stroke: #333; }
@@ -47,7 +45,8 @@
         .domain-tag { display: inline-block; padding: 6px 14px; border: 1px solid #333; border-radius: 20px; font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: #fff; margin-bottom: 20px; margin-right: 8px;}
         h1 { font-family: 'EB Garamond', serif; font-size: 2.8rem; font-weight: 400; margin: 0 0 15px 0; }
         .meta-data { font-size: 0.85rem; color: var(--text-muted); border-bottom: 1px solid #1f2229; padding-bottom: 20px; margin-bottom: 30px; text-transform: uppercase; letter-spacing: 1px;}
-        .media-container { width: 100%; aspect-ratio: 16/9; background: #000; margin-bottom: 30px; border-radius: 6px; overflow: hidden; border: 1px solid #1f2229; }
+        .media-container { width: 100%; aspect-ratio: 16/9; background: #000; margin-bottom: 30px; border-radius: 6px; overflow: hidden; border: 1px solid #1f2229; display: none; }
+        .media-container.active { display: block; }
         .media-container img { width: 100%; height: 100%; object-fit: cover; opacity: 0.85; }
         .content-body { font-size: 1.05rem; line-height: 1.7; font-weight: 300; color: #c4c9d0; }
         
@@ -77,7 +76,7 @@
         <div id="panel-domain-container"></div>
         <h1 id="panel-title"></h1>
         <div class="meta-data" id="panel-meta"></div>
-        <div class="media-container"><img id="panel-img" src="" alt="Data"></div>
+        <div class="media-container" id="panel-media"><img id="panel-img" src="" alt="Data"></div>
         <div class="content-body" id="panel-desc"></div>
         <div class="interdependency-list">
             <h3>Key Interdependencies</h3>
@@ -110,34 +109,39 @@
             d3.csv("links.csv")
         ]).then(function([rawNodes, rawLinks]) {
             
+            // Bulletproof data parsing: handles missing cells, trailing spaces, and alternate column names
             const nodes = rawNodes.map(d => {
                 const extractedDomains = [];
                 if (d.domain1 && d.domain1.trim() !== "") extractedDomains.push(d.domain1.trim());
                 if (d.domain2 && d.domain2.trim() !== "") extractedDomains.push(d.domain2.trim());
+                
+                // Fallback in case the user kept the original 'domains' column name
+                if (extractedDomains.length === 0 && d.domains && d.domains.trim() !== "") {
+                    d.domains.split("|").forEach(dom => extractedDomains.push(dom.trim()));
+                }
 
                 return {
-                    id: d.id.trim(),
-                    title: d.title.trim(),
+                    id: (d.id || "").trim(),
+                    title: (d.title || d.id || "Unnamed Node").trim(),
                     domains: extractedDomains.length > 0 ? extractedDomains : ["Core"],
-                    meta: d.meta,
-                    desc: d.desc,
-                    img: d.img,
-                    // If no year exists, return null instead of a fallback date
+                    meta: (d.meta || d.Meta || "").trim(),
+                    desc: (d.desc || d.Description || d.description || "").trim(),
+                    img: (d.img || d.Image || "").trim(),
                     year: (d.year && d.year.trim() !== "") ? parseInt(d.year) : null
                 };
-            });
+            }).filter(n => n.id !== ""); // Strip completely empty rows
 
             const links = rawLinks.map(d => ({
-                source: d.source.trim(),
-                target: d.target.trim(),
-                label: d.label.trim(),
-                category: d.category.trim()
-            }));
+                source: (d.source || "").trim(),
+                target: (d.target || "").trim(),
+                label: (d.label || "relates to").trim(),
+                category: (d.category || "General").trim()
+            })).filter(l => l.source !== "" && l.target !== "");
 
             initGraph(nodes, links);
         }).catch(error => {
-            console.error("Error loading CSV files. Ensure you are running a local server or viewing on GitHub Pages.", error);
-            document.getElementById('graph-container').innerHTML = `<h2 style="color:white; padding:50px;">Error Loading CSVs. <br><br>If testing locally, you must run a local web server (e.g. VSCode Live Server) to fetch files.</h2>`;
+            console.error("Error loading CSV files.", error);
+            document.getElementById('graph-container').innerHTML = `<h2 style="color:white; padding:50px;">Error Loading CSVs. <br><br>If testing locally, you must run a local web server (e.g. VSCode Live Server).</h2>`;
         });
 
         function initGraph(nodes, links) {
@@ -157,9 +161,9 @@
             nodes.forEach(n => {
                 n.size = 10 + ((degreeMap[n.id] || 0) * 2.5);
                 if (n.domains.length > 1) {
-                    const gradId = "grad-" + n.domains.join("");
+                    const gradId = "grad-" + n.domains.join("").replace(/[^a-zA-Z0-9]/g, '');
                     n.fill = `url(#${gradId})`;
-                    n.fallbackColor = domainColors[n.domains[0]];
+                    n.fallbackColor = domainColors[n.domains[0]] || "#ffffff";
                     if (!document.getElementById(gradId)) {
                         const grad = defs.append("linearGradient").attr("id", gradId);
                         n.domains.forEach((d, i) => grad.append("stop").attr("offset", `${(i / (n.domains.length - 1)) * 100}%`).attr("stop-color", domainColors[d] || "#fff"));
@@ -199,7 +203,6 @@
                 nodeGroups.attr("transform", d => `translate(${d.x},${d.y})`);
             });
 
-            // Adjust X-axis to focus purely on historical dates available in data
             const xScale = d3.scaleLinear().domain([1800, 2030]).range([-width, width * 2]);
             const xAxis = d3.axisBottom(xScale).tickFormat(d3.format("d")).ticks(10);
             xAxisGroup.call(xAxis);
@@ -210,13 +213,10 @@
                 
                 if (isTimelineMode) {
                     xAxisGroup.transition().duration(1000).style("opacity", 1);
-                    
-                    // Filter out nodes without a year and their connected links
                     nodeGroups.filter(d => d.year === null).classed('hidden-timeline', true);
                     linkPaths.filter(l => l.source.year === null || l.target.year === null).classed('hidden-timeline', true);
                     linkTexts.filter(l => l.source.year === null || l.target.year === null).classed('hidden-timeline', true);
 
-                    // Apply layout forces ONLY to nodes with a year
                     simulation
                         .force("x", d3.forceX(d => d.year !== null ? xScale(d.year) : 0).strength(d => d.year !== null ? 1 : 0))
                         .force("y", d3.forceY(height / 2).strength(d => d.year !== null ? 0.1 : 0))
@@ -226,8 +226,6 @@
                     svg.transition().duration(1000).call(zoom.transform, d3.zoomIdentity.translate(width/2, height/2).scale(0.4).translate(-width/2, -height/2));
                 } else {
                     xAxisGroup.transition().duration(1000).style("opacity", 0);
-                    
-                    // Restore visibility to all elements
                     nodeGroups.classed('hidden-timeline', false);
                     linkPaths.classed('hidden-timeline', false);
                     
@@ -282,8 +280,6 @@
             nodeGroups.classed('dimmed', n => !connectedNodes.includes(n.id));
             linkPaths.classed('dimmed', true); linkTexts.classed('show-labels', false);
             linkPaths.filter(l => connectedLinks.includes(l)).classed('dimmed', false).classed('highlighted-link', true);
-            
-            // Only show link text if the link itself is not hidden by timeline mode
             linkTexts.filter(l => connectedLinks.includes(l) && !d3.select(l).classed('hidden-timeline')).classed('show-labels', true);
         }
 
@@ -294,6 +290,7 @@
             if (d3.zoomTransform(svg.node()).k <= 1.2) linkTexts.classed('show-labels', false);
         }
 
+        // Global RegExp to clean citation tags
         const citeCleaner = new RegExp("\\[c" + "ite: \\d+\\]", "g");
 
         function handleNodeClick(d, nodes, links, linkPaths, linkTexts, nodeGroups) {
@@ -306,17 +303,25 @@
             nodeGroups.classed('dimmed', n => !connectedNodes.includes(n.id));
             linkPaths.classed('dimmed', true).classed('highlighted-link', false);
             linkPaths.filter(l => connectedLinks.includes(l)).classed('dimmed', false).classed('highlighted-link', true);
-            
             linkTexts.filter(l => connectedLinks.includes(l) && !d3.select(l).classed('hidden-timeline')).classed('show-labels', true);
 
-            document.getElementById('panel-domain-container').innerHTML = d.domains.map(dom => `<div class="domain-tag" style="background:${domainColors[dom]}33; border-color:${domainColors[dom]}">${dom}</div>`).join('');
+            // Bulletproof Content Injection
+            document.getElementById('panel-domain-container').innerHTML = d.domains.map(dom => `<div class="domain-tag" style="background:${domainColors[dom] || '#ffffff'}33; border-color:${domainColors[dom] || '#ffffff'}">${dom}</div>`).join('');
             document.getElementById('panel-title').innerText = d.title;
             document.getElementById('panel-meta').innerText = d.meta;
-            document.getElementById('panel-img').src = d.img;
             document.getElementById('panel-desc').innerHTML = d.desc.replace(citeCleaner, '');
+            
+            // Handle image logic seamlessly if blank
+            const mediaContainer = document.getElementById('panel-media');
+            if (d.img && d.img !== "") {
+                document.getElementById('panel-img').src = d.img;
+                mediaContainer.classList.add('active');
+            } else {
+                mediaContainer.classList.remove('active');
+            }
 
             const groupedLinks = {};
-            connectedLinks.forEach(l => { (groupedLinks[l.category] = groupedLinks[l.category] || []).push(l); });
+            connectedLinks.forEach(l => { (groupedLinks[l.category || "General"] = groupedLinks[l.category || "General"] || []).push(l); });
 
             let linksHTML = "";
             for (const [category, arr] of Object.entries(groupedLinks)) {
@@ -324,7 +329,14 @@
                 arr.forEach(l => {
                     const isSrc = l.source.id === d.id;
                     const related = isSrc ? l.target : l.source;
-                    linksHTML += `<div class="interdependency-sentence"><span class="node-link" style="color:${d.fallbackColor}" onclick="window.jumpToNodeUI('${related.id}')">${d.title}</span> <span class="verb-text">${isSrc ? l.label : "is "+l.label+" by"}</span> <span class="node-link" style="color:${related.fallbackColor}" onclick="window.jumpToNodeUI('${related.id}')">${related.title}</span>.</div>`;
+                    
+                    // The first span references d.id (so it jumps to itself if desired), the second to related.id
+                    linksHTML += `
+                    <div class="interdependency-sentence">
+                        <span class="node-link" style="color:${d.fallbackColor}" onclick="window.jumpToNodeUI('${d.id}')">${d.title}</span> 
+                        <span class="verb-text">${isSrc ? l.label : "is "+l.label+" by"}</span> 
+                        <span class="node-link" style="color:${related.fallbackColor}" onclick="window.jumpToNodeUI('${related.id}')">${related.title}</span>.
+                    </div>`;
                 });
             }
             document.getElementById('panel-links').innerHTML = linksHTML;
@@ -333,7 +345,7 @@
 
         function resetGraph() {
             document.getElementById('detail-panel').classList.remove('active');
-            d3.selectAll('.graph-element').classed('dimmed', false).classed('highlighted', false).classed('highlighted-link', false);
+            d3.selectAll('.graph-element:not(.hidden-timeline)').classed('dimmed', false).classed('highlighted', false).classed('highlighted-link', false);
             svg.transition().duration(1000).call(zoom.transform, d3.zoomIdentity.translate(width/2, height/2).scale(0.55).translate(-width/2, -height/2));
             d3.selectAll('.link-label').classed('show-labels', false);
         }
