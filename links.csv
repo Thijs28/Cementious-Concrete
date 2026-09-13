@@ -1,27 +1,23 @@
 source,target,label,category
-Portland_Cement,Concrete,binds into,Systemic Structure
-Quarrying,Limestone,extracts,Transformation
-Limestone,Rotary_Kiln,is processed in,Transformation
-Rotary_Kiln,Clinker,fires into,Transformation
-Clinker,Portland_Cement,is ground into,Transformation
-Rotary_Kiln,Embodied_Carbon,chemically releases,Impact
-Portland_Cement,Hydration,undergoes,Transformation
-Hydration,Concrete,cures,Transformation
-Concrete,Carbonation,ages through,Transformation
-Concrete,Tensile_Weakness,exhibits,Impact
-Steel_Rebar,Concrete,mechanically reinforces,Systemic Structure
-Carbonation,Steel_Rebar,depassivates,Impact
-SCMs,Portland_Cement,partially replaces,Dependency
-Aspdin_1824,Portland_Cement,invented,Historical Context
-Rotary_Kiln,Territorial_Control,scaled production for,Dependency
-Welfare_State,Concrete,mass-deployed,Historical Context
-Welfare_State,Multinational_Oligopoly,privatized into,Historical Context
-Multinational_Oligopoly,Quarrying,controls,Dependency
-Embodied_Carbon,Carbon_Economy,forces,Impact
-Concrete,Demolition_Waste,ends life as,Systemic Structure
-Demolition_Waste,RCA,is crushed into,Transformation
-RCA,Concrete,is downcycled into,Transformation
-Carbonation,Reflectance,whitens,Impact
-Concrete,Thermal_Mass,provides,Systemic Structure
-Concrete,Acoustic_Reflectance,provides,Systemic Structure
-Steel_Rebar,Tensile_Weakness,reduces,Impact
+Alite,Hydration,undergoes,Transformation
+Belite,Hydration,undergoes,Transformation
+Hydration,CSH_Gel,produces,Transformation
+Hydration,Calcium_Hydroxide,produces,Transformation
+Water_Cement_Ratio,Capillary_Porosity,dictates,Systemic Structure
+Water_Cement_Ratio,Hydration,enables,Systemic Structure
+Capillary_Porosity,Carbonation,facilitates,Ecological
+Capillary_Porosity,Chloride_Ingress,facilitates,Ecological
+Carbonation,Passive_Oxide_Layer,destroys,Ecological
+Chloride_Ingress,Passive_Oxide_Layer,punctures,Ecological
+ITZ,Capillary_Porosity,increases locally,Systemic Structure
+Drying_Shrinkage,Capillary_Porosity,caused by,Systemic Structure
+Creep,CSH_Gel,deforms,Systemic Structure
+SCMs,Calcium_Hydroxide,consumes,Transformation
+SCMs,CSH_Gel,produces secondary,Transformation
+RCA,ITZ,creates double,Systemic Structure
+RCA,Carbonation,sequesters via,Ecological
+Superplasticizers,Water_Cement_Ratio,reduces,Technical
+ASR,Concrete,damages,Systemic Structure
+LC3,Portland_Cement,replaces clinker in,Technical
+DEF,CSH_Gel,fractures,Technical
+Geopolymers,Portland_Cement,acts as alternative to,Technical
