@@ -144,75 +144,79 @@
         const defs = svg.append("defs");
         const xAxisGroup = g.append("g").attr("class", "axis").style("opacity", 0);
 
-        // Advanced CSV cleaning to strip invisible non-breaking spaces & tabs
-        const strictNormalize = (str) => {
-            if(!str) return "";
-            return str.replace(/\u00A0/g, ' ') // Replace non-breaking spaces
-                      .replace(/[\r\n\t]+/g, ' ') // Replace tabs and line breaks
-                      .replace(/^\uFEFF/, '') // Replace byte order mark
-                      .trim(); 
-        };
-
-        const cleanCSVKeys = (obj) => {
-            const cleanObj = {};
-            for (let key in obj) {
-                cleanObj[strictNormalize(key)] = strictNormalize(obj[key]);
-            }
-            return cleanObj;
-        };
-
-        let globalNodes = [];
-        let globalLinks = [];
-        let globalNodeGroups = null;
-        let globalLinkPaths = null;
-        let globalLinkTexts = null;
+        // Core visual logic checks
+        const isHiddenNode = (n) => isTimelineMode && n.year === null;
+        const isHiddenLink = (l) => isTimelineMode && (l.source.year === null || l.target.year === null);
 
         Promise.all([
-            d3.csv("nodes.csv"),
-            d3.csv("links.csv")
-        ]).then(function([rawNodes, rawLinks]) {
+            d3.text("nodes.csv"),
+            d3.text("links.csv")
+        ]).then(function([rawNodesText, rawLinksText]) {
             
-            globalNodes = rawNodes.map(cleanCSVKeys).map(d => {
+            // Dynamic delimiter detection for international CSV formats (comma, semicolon, or tab)
+            const parseCSV = (text) => {
+                const firstLine = text.split('\n')[0];
+                let delimiter = ',';
+                if (firstLine.includes('\t')) delimiter = '\t';
+                else if (firstLine.includes(';') && (!firstLine.includes(',') || firstLine.indexOf(';') < firstLine.indexOf(','))) delimiter = ';';
+                return d3.dsvFormat(delimiter).parse(text);
+            };
+
+            const rawNodes = parseCSV(rawNodesText);
+            const rawLinks = parseCSV(rawLinksText);
+
+            // Force keys to lowercase to bypass all column header spelling/case errors
+            const cleanKey = (k) => k.replace(/^\uFEFF/, '').trim().toLowerCase();
+
+            globalNodes = rawNodes.map(obj => {
+                const d = {};
+                for (let k in obj) d[cleanKey(k)] = (obj[k] || "").trim();
+
                 const extractedDomains = [];
                 if (d.domain1 && d.domain1 !== "") extractedDomains.push(d.domain1);
                 if (d.domain2 && d.domain2 !== "") extractedDomains.push(d.domain2);
                 if (d.domain3 && d.domain3 !== "") extractedDomains.push(d.domain3);
                 
                 if (extractedDomains.length === 0 && d.domains && d.domains !== "") {
-                    d.domains.split("|").forEach(dom => extractedDomains.push(strictNormalize(dom)));
+                    d.domains.split("|").forEach(dom => extractedDomains.push(dom.trim()));
                 }
 
                 const extractedSubjects = [];
-                const rawSubject = d.section || d.Section || d.subject || d.Subject || "";
+                const rawSubject = d.section || d.subject || "";
                 if (rawSubject !== "") {
-                    rawSubject.split("|").forEach(s => extractedSubjects.push(strictNormalize(s)));
+                    rawSubject.split("|").forEach(s => extractedSubjects.push(s.trim()));
                 }
 
                 return {
-                    id: (d.id || d.ID || "").replace(/\s/g, ''), // Strip spaces from IDs
-                    title: d.title || d.Title || d.id || "Unnamed Node",
+                    id: (d.id || "").replace(/\s/g, ''),
+                    title: d.title || d.id || "Unnamed Node",
                     domains: extractedDomains.length > 0 ? extractedDomains : ["Core"],
                     subjects: extractedSubjects,
-                    meta: d.meta || d.Meta || "",
-                    desc: d.desc || d.Description || d.description || "",
-                    img: d.img || d.Image || d.image || "",
+                    meta: d.meta || "",
+                    desc: d.desc || d.description || "",
+                    img: d.img || d.image || "",
                     year: (d.year && d.year !== "") ? parseInt(d.year) : null
                 };
             }).filter(n => n.id !== "");
 
             const validNodeIds = new Set(globalNodes.map(n => n.id));
 
-            globalLinks = rawLinks.map(cleanCSVKeys).map(d => ({
-                source: (d.source || d.Source || "").replace(/\s/g, ''),
-                target: (d.target || d.Target || "").replace(/\s/g, ''),
-                label: d.label || d.Label || "relates to",
-                category: d.category || d.Category || "General"
-            })).filter(l => validNodeIds.has(l.source) && validNodeIds.has(l.target));
+            globalLinks = rawLinks.map(obj => {
+                const d = {};
+                for (let k in obj) d[cleanKey(k)] = (obj[k] || "").trim();
+                
+                return {
+                    source: (d.source || "").replace(/\s/g, ''),
+                    target: (d.target || "").replace(/\s/g, ''),
+                    label: d.label || "relates to",
+                    category: d.category || "General"
+                };
+            }).filter(l => validNodeIds.has(l.source) && validNodeIds.has(l.target));
 
             initGraph();
         }).catch(error => {
             console.error("Error loading CSV files:", error);
-            document.getElementById('graph-container').innerHTML = `<h2 style="color:white; padding:50px;">Error Loading CSVs.</h2>`;
+            document.getElementById('graph-container').innerHTML = `<h2 style="color:white; padding:50px;">Error Loading CSVs. Check console for details.</h2>`;
         });
 
         function initGraph() {
@@ -339,9 +343,7 @@
                 
                 d3.selectAll('.graph-element').classed('dimmed', true).classed('highlighted', false);
                 
-                // Extremely loose matching logic to bypass CSV encoding errors
                 const cleanInputSubject = subject.toLowerCase().replace(/[^a-z0-9]/g, '');
-                
                 const isMatch = (arr) => {
                     return arr.some(s => {
                         const cleanS = s.toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -349,8 +351,9 @@
                     });
                 };
                 
-                globalNodeGroups.filter(n => isMatch(n.subjects) && !d3.select(n).classed('hidden-timeline')).classed('dimmed', false).classed('highlighted', true);
-                globalLinkPaths.filter(l => isMatch(l.source.subjects) && isMatch(l.target.subjects) && !d3.select(l).classed('hidden-timeline')).classed('dimmed', false);
+                // Bug fix: Replaced .classed on data selection with proper strict logic evaluation
+                globalNodeGroups.filter(n => isMatch(n.subjects) && !isHiddenNode(n)).classed('dimmed', false).classed('highlighted', true);
+                globalLinkPaths.filter(l => isMatch(l.source.subjects) && isMatch(l.target.subjects) && !isHiddenLink(l)).classed('dimmed', false);
                 
                 presentationQueue = globalNodes.filter(n => isMatch(n.subjects));
                 
@@ -448,8 +451,7 @@
             globalLinkPaths.classed('dimmed', true); globalLinkTexts.classed('show-labels', false);
             globalLinkPaths.filter(l => connectedLinks.includes(l)).classed('dimmed', false).classed('highlighted-link', true);
             
-            const isHidden = (l) => isTimelineMode && (l.source.year === null || l.target.year === null);
-            globalLinkTexts.filter(l => connectedLinks.includes(l) && !isHidden(l)).classed('show-labels', true);
+            globalLinkTexts.filter(l => connectedLinks.includes(l) && !isHiddenLink(l)).classed('show-labels', true);
         }
 
         function handleNodeOut() {
@@ -479,8 +481,7 @@
                 globalLinkPaths.classed('dimmed', true).classed('highlighted-link', false);
                 globalLinkPaths.filter(l => connectedLinks.includes(l)).classed('dimmed', false).classed('highlighted-link', true);
                 
-                const isHidden = (l) => isTimelineMode && (l.source.year === null || l.target.year === null);
-                globalLinkTexts.filter(l => connectedLinks.includes(l) && !isHidden(l)).classed('show-labels', true);
+                globalLinkTexts.filter(l => connectedLinks.includes(l) && !isHiddenLink(l)).classed('show-labels', true);
 
                 document.getElementById('panel-domain-container').innerHTML = d.domains.map(dom => `<div class="domain-tag" style="background:${domainColors[dom] || '#ffffff'}33; border-color:${domainColors[dom] || '#ffffff'}">${dom}</div>`).join('');
                 document.getElementById('panel-title').innerText = d.title;
