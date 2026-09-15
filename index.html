@@ -7,17 +7,14 @@
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
-        :root { --bg-color: #0b0c10; --text-primary: #e0e6ed; --text-muted: #8b929a; --panel-bg: rgba(11, 12, 16, 0.96); }
+        :root { --bg-color: #0b0c10; --text-primary: #e0e6ed; --text-muted: #8b929a; --panel-bg: rgba(11, 12, 16, 0.96); --accent: #D4AF37; }
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: var(--bg-color); color: var(--text-primary); font-family: 'Inter', sans-serif; overflow: hidden; }
         
-        /* Disable text selection on the SVG to fix panning issues */
         svg { user-select: none; -webkit-user-select: none; }
 
         #graph-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
         .node-circle { transition: stroke 0.3s, r 0.3s; cursor: pointer; }
         .node-circle:hover { stroke: #ffffff !important; stroke-width: 2.5px !important; }
-        
-        /* Prevent pointer interference from labels */
         .node-label { font-family: 'EB Garamond', serif; font-size: 14px; fill: var(--text-primary); pointer-events: none; text-shadow: 0 4px 12px rgba(0,0,0,1); transition: opacity 0.3s; user-select: none; }
         .link-line { stroke: #2a2d34; stroke-opacity: 0.6; fill: none; transition: stroke-opacity 0.3s, stroke 0.3s; }
         .link-label { font-family: 'Inter', sans-serif; font-size: 9px; fill: #7a8288; text-transform: uppercase; letter-spacing: 1.5px; pointer-events: none; text-anchor: middle; font-weight: 600; text-shadow: 0 2px 4px rgba(0,0,0,0.9); opacity: 0; transition: opacity 0.3s; user-select: none; }
@@ -31,20 +28,19 @@
         .axis line, .axis path { stroke: #333; }
         .axis text { fill: #888; font-family: 'Inter', sans-serif; font-size: 14px; pointer-events: none; user-select: none; }
         
-        /* Pointer-events: none allows graph panning in empty spaces of the UI layer */
         #ui-layer { position: absolute; bottom: 40px; left: 40px; display: flex; gap: 20px; z-index: 50; align-items: flex-end; pointer-events: none; }
         
-        /* Re-enable pointer events for the actual interactive UI elements */
-        #legend { pointer-events: auto; background: rgba(11, 12, 16, 0.85); backdrop-filter: blur(15px); border: 1px solid #1f2229; border-radius: 8px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); min-width: 180px; }
-        .btn-toggle { pointer-events: auto; background: #D4AF37; color: #000; border: none; padding: 15px 25px; border-radius: 8px; font-family: 'Inter', sans-serif; font-size: 0.9rem; text-transform: uppercase; font-weight: 600; letter-spacing: 1px; cursor: pointer; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3); transition: all 0.3s; height: fit-content; }
+        #legend { pointer-events: auto; background: rgba(11, 12, 16, 0.85); backdrop-filter: blur(15px); border: 1px solid #1f2229; border-radius: 8px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); min-width: 280px; max-width: 320px; }
+        .btn-toggle { pointer-events: auto; background: var(--accent); color: #000; border: none; padding: 15px 25px; border-radius: 8px; font-family: 'Inter', sans-serif; font-size: 0.9rem; text-transform: uppercase; font-weight: 600; letter-spacing: 1px; cursor: pointer; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3); transition: all 0.3s; height: fit-content; }
+        .btn-toggle:hover { background: #e5c158; transform: translateY(-2px); }
         
         .legend-title { font-family: 'EB Garamond', serif; color: var(--text-primary); font-size: 1.4rem; margin-bottom: 15px; border-bottom: 1px solid #1f2229; padding-bottom: 8px; user-select: none; }
-        .legend-item { display: flex; align-items: center; gap: 12px; padding: 8px 0; cursor: pointer; font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.5px; transition: all 0.2s; user-select: none; }
+        .legend-item { display: flex; align-items: flex-start; gap: 12px; padding: 8px 0; cursor: pointer; font-size: 0.85rem; color: var(--text-muted); transition: all 0.2s; user-select: none; line-height: 1.4; }
         .legend-item:hover { color: #fff; transform: translateX(5px); }
         .legend-item.active { color: #fff; font-weight: 600; }
-        .legend-color { width: 14px; height: 14px; border-radius: 50%; }
-
-        .btn-toggle:hover { background: #e5c158; transform: translateY(-2px); }
+        
+        .legend-number { width: 22px; height: 22px; border-radius: 50%; background: rgba(212, 175, 55, 0.1); border: 1px solid var(--accent); color: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold; flex-shrink: 0; transition: all 0.3s; }
+        .legend-item.active .legend-number { background: var(--accent); color: #000; }
 
         #detail-panel { position: absolute; top: 0; right: -750px; width: 600px; height: 100%; background: var(--panel-bg); backdrop-filter: blur(20px); border-left: 1px solid #1f2229; padding: 50px 45px; box-sizing: border-box; transition: right 0.7s cubic-bezier(0.19, 1, 0.22, 1); overflow-y: auto; z-index: 100; box-shadow: -15px 0 40px rgba(0,0,0,0.9); }
         #detail-panel.active { right: 0; }
@@ -75,7 +71,7 @@
     
     <div id="ui-layer">
         <div id="legend">
-            <div class="legend-title">Domains</div>
+            <div class="legend-title">Thematic Sections</div>
             <div id="legend-items"></div>
         </div>
         <button id="timelineToggle" class="btn-toggle">View Chronology</button>
@@ -97,7 +93,18 @@
     <script>
         const domainColors = { "Core": "#D4AF37", "Scientific": "#5D8AA8", "Technical": "#CD7F32", "Historical": "#8B9A9A", "GeoPolitical": "#B24C4C", "Ecological": "#4A7A59", "Sensory": "#7A5C7A" };
         
-        let currentDomainFilter = null;
+        const thematicSubjects = [
+            "Origins of Cement: From Lime to Portland Cement",
+            "Industrialisation and Global Expansion",
+            "The Geography and Production of Cement/concrete",
+            "Concrete as an Architectural Material",
+            "Labour, Power, and Geopolitics",
+            "Environmental Costs",
+            "End of Life and Circularity",
+            "Future of Cement and Concrete"
+        ];
+        
+        let currentSubjectFilter = null;
         let isTimelineMode = false;
         
         const width = window.innerWidth;
@@ -129,18 +136,28 @@
         ]).then(function([rawNodes, rawLinks]) {
             
             const nodes = rawNodes.map(cleanCSVKeys).map(d => {
+                // Parse up to 3 domains for colors/gradients
                 const extractedDomains = [];
                 if (d.domain1 && d.domain1.trim() !== "") extractedDomains.push(d.domain1.trim());
                 if (d.domain2 && d.domain2.trim() !== "") extractedDomains.push(d.domain2.trim());
+                if (d.domain3 && d.domain3.trim() !== "") extractedDomains.push(d.domain3.trim());
                 
                 if (extractedDomains.length === 0 && d.domains && d.domains.trim() !== "") {
                     d.domains.split("|").forEach(dom => extractedDomains.push(dom.trim()));
+                }
+
+                // Parse Thematic Sections/Subjects
+                const extractedSubjects = [];
+                const rawSubject = d.section || d.Section || d.subject || d.Subject || "";
+                if (rawSubject.trim() !== "") {
+                    rawSubject.split("|").forEach(s => extractedSubjects.push(s.trim()));
                 }
 
                 return {
                     id: (d.id || d.ID || "").trim(),
                     title: (d.title || d.Title || d.id || "Unnamed Node").trim(),
                     domains: extractedDomains.length > 0 ? extractedDomains : ["Core"],
+                    subjects: extractedSubjects,
                     meta: (d.meta || d.Meta || "").trim(),
                     desc: (d.desc || d.Description || d.description || "").trim(),
                     img: (d.img || d.Image || d.image || "").trim(),
@@ -164,16 +181,18 @@
         });
 
         function initGraph(nodes, links) {
+            // Build Subject Legend
             const legendContainer = document.getElementById('legend-items');
-            for (const [domain, color] of Object.entries(domainColors)) {
+            thematicSubjects.forEach((subject, index) => {
                 const item = document.createElement('div');
                 item.className = 'legend-item';
-                item.id = 'legend-' + domain;
-                item.onclick = () => toggleDomainFilter(domain, nodes, links);
-                item.innerHTML = `<div class="legend-color" style="background:${color}"></div><span>${domain}</span>`;
+                item.id = 'legend-subject-' + index;
+                item.onclick = () => toggleSubjectFilter(subject, index, nodes, links);
+                item.innerHTML = `<div class="legend-number">${index + 1}</div><span>${subject}</span>`;
                 legendContainer.appendChild(item);
-            }
+            });
 
+            // Calculate Sizes & Apply Domain Colors
             const degreeMap = {};
             links.forEach(l => { 
                 degreeMap[l.source] = (degreeMap[l.source] || 0) + 1; 
@@ -270,32 +289,36 @@
         function dragged(e, d) { d.fx = e.x; d.fy = e.y; }
         function dragend(e, d) { if (!e.active) simulation.alphaTarget(0); d.fx = null; d.fy = null; }
 
-        function toggleDomainFilter(domain, nodes, links) {
+        function toggleSubjectFilter(subject, index, nodes, links) {
             document.getElementById('detail-panel').classList.remove('active');
-            if (currentDomainFilter === domain) {
-                currentDomainFilter = null;
+            if (currentSubjectFilter === subject) {
+                currentSubjectFilter = null;
                 d3.selectAll('.legend-item').classed('active', false);
                 d3.selectAll('.graph-element:not(.hidden-timeline)').classed('dimmed', false).classed('highlighted', false);
             } else {
-                currentDomainFilter = domain;
+                currentSubjectFilter = subject;
                 d3.selectAll('.legend-item').classed('active', false);
-                document.getElementById('legend-' + domain).classList.add('active');
+                document.getElementById('legend-subject-' + index).classList.add('active');
                 
                 d3.selectAll('.graph-element').classed('dimmed', true).classed('highlighted', false);
-                d3.selectAll('.node:not(.hidden-timeline)').filter(n => n.domains.includes(domain)).classed('dimmed', false).classed('highlighted', true);
-                d3.selectAll('.link-line:not(.hidden-timeline)').filter(l => l.source.domains.includes(domain) && l.target.domains.includes(domain)).classed('dimmed', false);
                 
-                const domainNodes = nodes.filter(n => n.domains.includes(domain));
-                if (domainNodes.length > 0 && !isTimelineMode) {
-                    const cx = (d3.min(domainNodes, d => d.x) + d3.max(domainNodes, d => d.x)) / 2;
-                    const cy = (d3.min(domainNodes, d => d.y) + d3.max(domainNodes, d => d.y)) / 2;
+                // Perform a loose match in case formatting/spaces vary slightly in the CSV
+                const isMatch = (arr, val) => arr.some(s => s.toLowerCase().includes(val.toLowerCase().split(':')[0]));
+                
+                d3.selectAll('.node:not(.hidden-timeline)').filter(n => isMatch(n.subjects, subject)).classed('dimmed', false).classed('highlighted', true);
+                d3.selectAll('.link-line:not(.hidden-timeline)').filter(l => isMatch(l.source.subjects, subject) && isMatch(l.target.subjects, subject)).classed('dimmed', false);
+                
+                const subjectNodes = nodes.filter(n => isMatch(n.subjects, subject));
+                if (subjectNodes.length > 0 && !isTimelineMode) {
+                    const cx = (d3.min(subjectNodes, d => d.x) + d3.max(subjectNodes, d => d.x)) / 2;
+                    const cy = (d3.min(subjectNodes, d => d.y) + d3.max(subjectNodes, d => d.y)) / 2;
                     svg.transition().duration(1000).call(zoom.transform, d3.zoomIdentity.translate(width/2, height/2).scale(0.8).translate(-cx, -cy));
                 }
             }
         }
 
         function handleNodeHover(d, links, nodeGroups, linkPaths, linkTexts) {
-            if (document.getElementById('detail-panel').classList.contains('active') || currentDomainFilter) return;
+            if (document.getElementById('detail-panel').classList.contains('active') || currentSubjectFilter) return;
             const connectedLinks = links.filter(l => l.source.id === d.id || l.target.id === d.id);
             const connectedNodes = [d.id, ...connectedLinks.map(l => l.source.id === d.id ? l.target.id : l.source.id)];
             
@@ -308,7 +331,7 @@
         }
 
         function handleNodeOut(nodeGroups, linkPaths, linkTexts) {
-            if (document.getElementById('detail-panel').classList.contains('active') || currentDomainFilter) return;
+            if (document.getElementById('detail-panel').classList.contains('active') || currentSubjectFilter) return;
             nodeGroups.classed('dimmed', false);
             linkPaths.classed('dimmed', false).classed('highlighted-link', false);
             if (d3.zoomTransform(svg.node()).k <= 1.2) linkTexts.classed('show-labels', false);
@@ -318,9 +341,8 @@
 
         function handleNodeClick(d, nodes, links, linkPaths, linkTexts, nodeGroups) {
             try {
-                currentDomainFilter = null; d3.selectAll('.legend-item').classed('active', false);
+                currentSubjectFilter = null; d3.selectAll('.legend-item').classed('active', false);
                 
-                // Calculates the exact center of the remaining viewing space so the node doesn't hide behind the UI Panel
                 const offsetX = width > 800 ? (width - 600) / 2 : width / 3;
                 svg.transition().duration(1000).call(zoom.transform, d3.zoomIdentity.translate(offsetX, height/2).scale(0.75).translate(-d.x, -d.y));
 
