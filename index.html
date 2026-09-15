@@ -54,7 +54,7 @@
         .media-container { width: 100%; aspect-ratio: 16/9; background: #000; margin-bottom: 30px; border-radius: 6px; overflow: hidden; border: 1px solid #1f2229; display: none; }
         .media-container.active { display: block; }
         .media-container img { width: 100%; height: 100%; object-fit: cover; opacity: 0.85; }
-        .content-body { font-size: 1.05rem; line-height: 1.7; font-weight: 300; color: #c4c9d0; flex-grow: 1; }
+        .content-body { font-size: 1.05rem; line-height: 1.7; font-weight: 300; color: #c4c9d0; flex-grow: 1; overflow-y: auto; }
         
         .interdependency-list { margin-top: 40px; padding-top: 25px; border-top: 1px solid #1f2229; display: none; }
         .interdependency-list.active { display: block; }
@@ -66,7 +66,6 @@
         .node-link:hover { opacity: 0.7; }
         .verb-text { font-style: italic; margin: 0 4px; color: #7a8288; }
 
-        /* Presentation UI Specifics */
         .toc-item { background: rgba(212, 175, 55, 0.05); border: 1px solid rgba(212, 175, 55, 0.2); padding: 15px 20px; border-radius: 6px; margin-bottom: 10px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: space-between; }
         .toc-item:hover { background: rgba(212, 175, 55, 0.15); border-color: var(--accent); transform: translateX(5px); }
         .toc-title { font-weight: 600; color: #fff; font-size: 1.1rem; }
@@ -105,7 +104,6 @@
         </div>
     </div>
 
-    <!-- Presentation Mode Footer -->
     <div id="presentation-controls">
         <button class="pres-btn" id="btn-prev" onclick="presPrev()">← Prev</button>
         <span id="pres-counter">Slide 1 / 5</span>
@@ -129,7 +127,6 @@
         let currentSubjectFilter = null;
         let isTimelineMode = false;
 
-        // Presentation State Variables
         let presentationQueue = [];
         let presentationIndex = -1;
         
@@ -147,16 +144,23 @@
         const defs = svg.append("defs");
         const xAxisGroup = g.append("g").attr("class", "axis").style("opacity", 0);
 
+        // Advanced CSV cleaning to strip invisible non-breaking spaces & tabs
+        const strictNormalize = (str) => {
+            if(!str) return "";
+            return str.replace(/\u00A0/g, ' ') // Replace non-breaking spaces
+                      .replace(/[\r\n\t]+/g, ' ') // Replace tabs and line breaks
+                      .replace(/^\uFEFF/, '') // Replace byte order mark
+                      .trim(); 
+        };
+
         const cleanCSVKeys = (obj) => {
             const cleanObj = {};
             for (let key in obj) {
-                const safeKey = key.replace(/^\uFEFF/, '').trim();
-                cleanObj[safeKey] = obj[key];
+                cleanObj[strictNormalize(key)] = strictNormalize(obj[key]);
             }
             return cleanObj;
         };
 
-        // Global variables assigned after CSV load so UI functions can access them
         let globalNodes = [];
         let globalLinks = [];
         let globalNodeGroups = null;
@@ -170,39 +174,39 @@
             
             globalNodes = rawNodes.map(cleanCSVKeys).map(d => {
                 const extractedDomains = [];
-                if (d.domain1 && d.domain1.trim() !== "") extractedDomains.push(d.domain1.trim());
-                if (d.domain2 && d.domain2.trim() !== "") extractedDomains.push(d.domain2.trim());
-                if (d.domain3 && d.domain3.trim() !== "") extractedDomains.push(d.domain3.trim());
+                if (d.domain1 && d.domain1 !== "") extractedDomains.push(d.domain1);
+                if (d.domain2 && d.domain2 !== "") extractedDomains.push(d.domain2);
+                if (d.domain3 && d.domain3 !== "") extractedDomains.push(d.domain3);
                 
-                if (extractedDomains.length === 0 && d.domains && d.domains.trim() !== "") {
-                    d.domains.split("|").forEach(dom => extractedDomains.push(dom.trim()));
+                if (extractedDomains.length === 0 && d.domains && d.domains !== "") {
+                    d.domains.split("|").forEach(dom => extractedDomains.push(strictNormalize(dom)));
                 }
 
                 const extractedSubjects = [];
                 const rawSubject = d.section || d.Section || d.subject || d.Subject || "";
-                if (rawSubject.trim() !== "") {
-                    rawSubject.split("|").forEach(s => extractedSubjects.push(s.trim()));
+                if (rawSubject !== "") {
+                    rawSubject.split("|").forEach(s => extractedSubjects.push(strictNormalize(s)));
                 }
 
                 return {
-                    id: (d.id || d.ID || "").trim(),
-                    title: (d.title || d.Title || d.id || "Unnamed Node").trim(),
+                    id: (d.id || d.ID || "").replace(/\s/g, ''), // Strip spaces from IDs
+                    title: d.title || d.Title || d.id || "Unnamed Node",
                     domains: extractedDomains.length > 0 ? extractedDomains : ["Core"],
                     subjects: extractedSubjects,
-                    meta: (d.meta || d.Meta || "").trim(),
-                    desc: (d.desc || d.Description || d.description || "").trim(),
-                    img: (d.img || d.Image || d.image || "").trim(),
-                    year: (d.year && d.year.trim() !== "") ? parseInt(d.year) : null
+                    meta: d.meta || d.Meta || "",
+                    desc: d.desc || d.Description || d.description || "",
+                    img: d.img || d.Image || d.image || "",
+                    year: (d.year && d.year !== "") ? parseInt(d.year) : null
                 };
             }).filter(n => n.id !== "");
 
             const validNodeIds = new Set(globalNodes.map(n => n.id));
 
             globalLinks = rawLinks.map(cleanCSVKeys).map(d => ({
-                source: (d.source || d.Source || "").trim(),
-                target: (d.target || d.Target || "").trim(),
-                label: (d.label || d.Label || "relates to").trim(),
-                category: (d.category || d.Category || "General").trim()
+                source: (d.source || d.Source || "").replace(/\s/g, ''),
+                target: (d.target || d.Target || "").replace(/\s/g, ''),
+                label: d.label || d.Label || "relates to",
+                category: d.category || d.Category || "General"
             })).filter(l => validNodeIds.has(l.source) && validNodeIds.has(l.target));
 
             initGraph();
@@ -256,9 +260,8 @@
             globalNodeGroups = g.append("g").selectAll("g").data(globalNodes).join("g").attr("class", "node graph-element")
                 .call(d3.drag().on("start", dragstart).on("drag", dragged).on("end", dragend))
                 .on("click", (e, d) => {
-                    // If clicked manually outside presentation flow, clear presentation tracker
                     if(!presentationQueue.includes(d)) endPresentationMode(); 
-                    else presentationIndex = presentationQueue.indexOf(d); // Sync index if clicked inside flow
+                    else presentationIndex = presentationQueue.indexOf(d); 
                     
                     handleNodeClick(d);
                 })
@@ -325,7 +328,7 @@
         function dragend(e, d) { if (!e.active) simulation.alphaTarget(0); d.fx = null; d.fy = null; }
 
         function toggleSubjectFilter(subject, index) {
-            endPresentationMode(); // Reset any existing presentation flow
+            endPresentationMode(); 
             
             if (currentSubjectFilter === subject) {
                 resetGraph();
@@ -336,20 +339,26 @@
                 
                 d3.selectAll('.graph-element').classed('dimmed', true).classed('highlighted', false);
                 
-                const isMatch = (arr, val) => arr.some(s => s.toLowerCase().includes(val.toLowerCase().split(':')[0]));
+                // Extremely loose matching logic to bypass CSV encoding errors
+                const cleanInputSubject = subject.toLowerCase().replace(/[^a-z0-9]/g, '');
                 
-                globalNodeGroups.filter(n => isMatch(n.subjects, subject) && !d3.select(n).classed('hidden-timeline')).classed('dimmed', false).classed('highlighted', true);
-                globalLinkPaths.filter(l => isMatch(l.source.subjects, subject) && isMatch(l.target.subjects, subject) && !d3.select(l).classed('hidden-timeline')).classed('dimmed', false);
+                const isMatch = (arr) => {
+                    return arr.some(s => {
+                        const cleanS = s.toLowerCase().replace(/[^a-z0-9]/g, '');
+                        return cleanS.includes(cleanInputSubject) || cleanInputSubject.includes(cleanS);
+                    });
+                };
                 
-                // Build Presentation Queue for this Subject
-                presentationQueue = globalNodes.filter(n => isMatch(n.subjects, subject));
+                globalNodeGroups.filter(n => isMatch(n.subjects) && !d3.select(n).classed('hidden-timeline')).classed('dimmed', false).classed('highlighted', true);
+                globalLinkPaths.filter(l => isMatch(l.source.subjects) && isMatch(l.target.subjects) && !d3.select(l).classed('hidden-timeline')).classed('dimmed', false);
                 
-                // Construct "Title Slide" panel for the Subject
+                presentationQueue = globalNodes.filter(n => isMatch(n.subjects));
+                
                 document.getElementById('panel-domain-container').innerHTML = `<div class="domain-tag" style="background:var(--accent); color:#000; border-color:var(--accent)">Thematic Focus</div>`;
                 document.getElementById('panel-title').innerText = subject;
                 document.getElementById('panel-meta').innerText = `${presentationQueue.length} Primary Nodes in Sequence`;
                 document.getElementById('panel-media').classList.remove('active');
-                document.getElementById('panel-interdependencies').classList.remove('active'); // Hide normal links
+                document.getElementById('panel-interdependencies').classList.remove('active');
                 
                 let tocHTML = `<p style="margin-bottom: 25px;">This thematic cluster maps the structural and historical interdependencies defining this aspect of cementitious concrete. Use the arrows below or your keyboard to follow the narrative sequence.</p>`;
                 
@@ -364,7 +373,6 @@
                 document.getElementById('panel-desc').innerHTML = tocHTML;
                 document.getElementById('detail-panel').classList.add('active');
 
-                // Camera Pan to subject cluster
                 if (presentationQueue.length > 0 && !isTimelineMode) {
                     const cx = (d3.min(presentationQueue, d => d.x) + d3.max(presentationQueue, d => d.x)) / 2;
                     const cy = (d3.min(presentationQueue, d => d.y) + d3.max(presentationQueue, d => d.y)) / 2;
@@ -372,13 +380,11 @@
                     svg.transition().duration(1000).call(zoom.transform, d3.zoomIdentity.translate(offsetX, height/2).scale(0.85).translate(-cx, -cy));
                 }
 
-                // Activate Presentation Controls Footbar
-                presentationIndex = -1; // -1 means we are on the Title Slide
+                presentationIndex = -1;
                 updatePresentationControls();
             }
         }
 
-        // Keyboard Event Listener for Powerpoint Clicker Support
         document.addEventListener('keydown', (e) => {
             if (presentationQueue.length > 0) {
                 if (e.key === 'ArrowRight' || e.key === 'PageDown') {
@@ -403,7 +409,6 @@
                 presentationIndex--;
                 handleNodeClick(presentationQueue[presentationIndex]);
             } else if (presentationIndex === 0) {
-                // Go back to title slide
                 toggleSubjectFilter(currentSubjectFilter, thematicSubjects.indexOf(currentSubjectFilter));
             }
         }
@@ -458,11 +463,10 @@
 
         function handleNodeClick(d) {
             try {
-                // If not in a sequence, clear legend selections
                 if (presentationQueue.length === 0) {
                     d3.selectAll('.legend-item').classed('active', false);
                 } else {
-                    updatePresentationControls(); // Sync UI footbar
+                    updatePresentationControls(); 
                 }
                 
                 const offsetX = width > 800 ? (width - 600) / 2 : width / 3;
@@ -491,7 +495,6 @@
                     mediaContainer.classList.remove('active');
                 }
 
-                // Show normally hidden interdependencies for individual nodes
                 document.getElementById('panel-interdependencies').classList.add('active');
 
                 const groupedLinks = {};
