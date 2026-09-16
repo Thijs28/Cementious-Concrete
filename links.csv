@@ -21,3 +21,45 @@ ASR,Concrete,damages,Systemic Structure
 LC3,Portland_Cement,replaces clinker in,Technical
 DEF,CSH_Gel,fractures,Technical
 Geopolymers,Portland_Cement,acts as alternative to,Technical
+Raw_materials,Water_Cement_Ratio,undergoes,Transformation
+Raw_materials,Hydration,undergoes,Transformation
+Processing,Step_1_Quarring,starts with,Technical
+Step_1_Quarring,Step_2_Crushing,is followed by,Technical
+Step_2_Crushing,Step_3_Grinding_&_mixing,is followed by,Technical
+Step_3_Grinding_&_mixing,Step_4_Preheating,is followed by,Technical
+Step_4_Preheating,Step_5_Calcination_&_clinker,is followed by,Technical
+Step_5_Calcination_&_clinker,Step_6_Cooling_the_clinker,is followed by,Technical
+Step_6_Cooling_the_clinker,Step_7_Final_grinding,is followed by,Technical
+Step_7_Final_grinding,Step_8_Making_concrete,is followed by,Technical
+Step_8_Making_concrete,Step_9_Forming,is followed by,Technical
+Construction_cement,Different_types,Consists of,Technical
+Formability,Step_9_Forming,is linked to,Technical
+Industrial_byproducts,SCMs,are called,Technical
+Reducing_waste,RCA,can be caused by,Technical
+Industrial_byproducts,RCA,Consists of,Technical
+Recovery,RCA,caused by,Technical
+scale_problem,carbon_footprint,drives,Systematic Structure
+scale_problem,raw_material_extraction,demands,Systematic Structure
+scale_problem,water_consumption,strains,Systematic Structure
+carbon_footprint,end_of_life,spans,Ecological
+raw_material_extraction,habitat_destruction,triggers,Ecological
+raw_material_extraction,physical_pollution,causes,Ecological
+habitat_destruction,ecosystems_biodiversity,disrupts,Ecological
+water_consumption,climate_challenge,threatens,Ecological
+urban_environment,climate_challenge,amplifies,Ecological
+end_of_life,recovery,requires,Transformation
+recovery,reuse,enables,Transformation
+recovery,recycling,enables,Transformation
+recycling,waste_streams,reprocesses,Technical
+waste_streams,SCMs,supplies,Transformation
+clinker_reduction,SCMs,incorporates,Technical
+SCMs,carbon_footprint,reduces,Technical
+modernising_kilns,carbon_footprint,lowers,Technical
+Geopolymers,clinker_reduction,replace,Transformation
+Carbonation,carbon_footprint,sequesters,Scientific
+Geopolymers,carbon_footprint,reduce,Technical
+recovery,raw_material_extraction,reduces,Transformation
+end_of_life,waste_streams,produces,Ecological
+carbon_footprint,climate_challenge,contributes to,Systematic Structure
+end_of_life,Carbonation,enables,Technical
+recycling,raw_material_extraction,reduces,Technical
