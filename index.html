@@ -28,18 +28,21 @@
         .axis line, .axis path { stroke: #333; }
         .axis text { fill: #888; font-family: 'Inter', sans-serif; font-size: 14px; pointer-events: none; user-select: none; }
         
-        /* Horizontal Top Ribbon */
+        /* Horizontal Top Ribbon - Added flex-shrink constraints and smooth scrolling */
         #top-ribbon {
             position: absolute; top: 0; left: 0; width: 100%; height: 60px;
             background: rgba(11, 12, 16, 0.95); backdrop-filter: blur(15px);
             border-bottom: 1px solid #1f2229; display: flex; align-items: center;
             padding: 0 30px; box-sizing: border-box; z-index: 90;
             pointer-events: auto; overflow-x: auto; scrollbar-width: none;
+            -webkit-overflow-scrolling: touch;
         }
         #top-ribbon::-webkit-scrollbar { display: none; }
-        .ribbon-title { font-family: 'EB Garamond', serif; color: var(--text-primary); font-size: 1.2rem; margin-right: 30px; white-space: nowrap; user-select: none; }
-        #legend-items { display: flex; align-items: center; gap: 25px; }
-        .legend-item { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.75rem; color: var(--text-muted); transition: all 0.2s; user-select: none; white-space: nowrap; text-transform: uppercase; letter-spacing: 1px; }
+        
+        .ribbon-title { font-family: 'EB Garamond', serif; color: var(--text-primary); font-size: 1.2rem; margin-right: 30px; white-space: nowrap; user-select: none; flex-shrink: 0; }
+        #legend-items { display: flex; align-items: center; gap: 25px; flex-shrink: 0; padding-right: 40px; }
+        .legend-item { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.75rem; color: var(--text-muted); transition: all 0.2s; user-select: none; white-space: nowrap; text-transform: uppercase; letter-spacing: 1px; flex-shrink: 0; }
+        
         .legend-item:hover { color: #fff; transform: translateY(-2px); }
         .legend-item.active { color: #fff; font-weight: 600; }
         .legend-number { width: 18px; height: 18px; border-radius: 50%; background: rgba(212, 175, 55, 0.1); border: 1px solid var(--accent); color: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 0.65rem; font-weight: bold; flex-shrink: 0; transition: all 0.3s; }
@@ -151,6 +154,13 @@
         const g = svg.append("g");
         const defs = svg.append("defs");
         const xAxisGroup = g.append("g").attr("class", "axis").style("opacity", 0);
+
+        // Map vertical mouse scrolling to horizontal scroll for the top ribbon
+        const topRibbon = document.getElementById('top-ribbon');
+        topRibbon.addEventListener('wheel', (evt) => {
+            evt.preventDefault();
+            topRibbon.scrollLeft += evt.deltaY;
+        }, { passive: false });
 
         const strictNormalize = (str) => {
             if(!str) return "";
