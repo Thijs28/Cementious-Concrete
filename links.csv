@@ -63,3 +63,28 @@ end_of_life,waste_streams,produces,Ecological
 carbon_footprint,climate_challenge,contributes to,Systematic Structure
 end_of_life,Carbonation,enables,Technical
 recycling,raw_material_extraction,reduces,Technical
+Portland_Cement,Hydration,relies chemically on,Dependency
+Mass_Production,Step_5_Calcination_&_clinker,scaled up,Historical Context
+Gas_Crisis,Energy,disrupted supply for,Impact
+Labour,Step_1_Quarring,performs,Dependency
+Labour,Step_9_Forming,executes on-site,Dependency
+Geography,Raw_materials,dictates availability of,Dependency
+Geography,water_consumption,limits,Impact
+Step_5_Calcination_&_clinker,carbon_footprint,is primary source of,Impact
+Step_1_Quarring,habitat_destruction,causes,Impact
+Step_2_Crushing,physical_pollution,generates dust for,Impact
+Hydration,water_consumption,demands,Dependency
+Water_Cement_Ratio,water_consumption,drives scale of,Impact
+climate_challenge,Drying_Shrinkage,exacerbates,Impact
+Carbon,Carbonation,is reabsorbed via,Transformation
+clinker_reduction,LC3,implemented via,Transformation
+modernising_kilns,Step_5_Calcination_&_clinker,optimizes,Transformation
+Cement_Corporations,scale_problem,drives,Impact
+Imperial_Power,raw_material_extraction,accelerated,Historical Context
+Waste,RCA,is downcycled into,Transformation
+waste_streams,Industrial_byproducts,provides materials for,Dependency
+Geopolymers,Carbon,avoids emissions of,Impact
+Capillary_Porosity,urban_environment,degrades,Systemic Structure
+Step_8_Making_concrete,urban_environment,shapes,Systemic Structure
+ASR,end_of_life,accelerates,Impact
+Chloride_Ingress,end_of_life,triggers early,Impact
