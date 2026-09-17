@@ -15,7 +15,12 @@
         #graph-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
         .node-circle { transition: stroke 0.3s, r 0.3s; cursor: pointer; }
         .node-circle:hover { stroke: #ffffff !important; stroke-width: 2.5px !important; }
-        .node-label { font-family: 'EB Garamond', serif; font-size: 14px; fill: var(--text-primary); pointer-events: none; text-shadow: 0 4px 12px rgba(0,0,0,1); transition: opacity 0.3s; user-select: none; }
+        
+        /* Node label scaling transitions */
+        .node-label { font-family: 'EB Garamond', serif; font-size: 14px; fill: var(--text-primary); pointer-events: none; text-shadow: 0 4px 12px rgba(0,0,0,1); transition: opacity 0.3s, font-size 0.4s, fill 0.4s, text-shadow 0.4s; user-select: none; }
+        .node-label.large-label { font-size: 32px !important; font-weight: 600; fill: #ffffff; text-shadow: 0 4px 20px rgba(0,0,0,1), 0 0 15px rgba(212, 175, 55, 0.6) !important; }
+        .node-label.medium-label { font-size: 20px !important; font-weight: 400; fill: #f0f4f8; text-shadow: 0 4px 15px rgba(0,0,0,1) !important; }
+
         .link-line { stroke: #2a2d34; stroke-opacity: 0.6; fill: none; transition: stroke-opacity 0.3s, stroke 0.3s; }
         .link-label { font-family: 'Inter', sans-serif; font-size: 9px; fill: #7a8288; text-transform: uppercase; letter-spacing: 1.5px; pointer-events: none; text-anchor: middle; font-weight: 600; text-shadow: 0 2px 4px rgba(0,0,0,0.9); opacity: 0; transition: opacity 0.3s; user-select: none; }
         
@@ -25,9 +30,13 @@
         .highlighted-link { stroke: #666 !important; stroke-opacity: 0.9 !important; stroke-width: 1.5px !important; }
         .hidden-timeline { opacity: 0 !important; pointer-events: none !important; transition: opacity 0.5s ease; }
         
+        /* Force visibility override when explicitly clicked */
+        .force-visible { opacity: 1 !important; pointer-events: auto !important; filter: none !important; }
+        
         .axis line, .axis path { stroke: #333; }
         .axis text { fill: #888; font-family: 'Inter', sans-serif; font-size: 14px; pointer-events: none; user-select: none; }
         
+        /* Horizontal Top Ribbon - Infinite Scroll Edition */
         #top-ribbon {
             position: absolute; top: 0; left: 0; width: 100%; height: 60px;
             background: rgba(11, 12, 16, 0.95); backdrop-filter: blur(15px);
@@ -38,7 +47,7 @@
         }
         #top-ribbon::-webkit-scrollbar { display: none; }
         
-        .ribbon-title { font-family: 'EB Garamond', serif; color: var(--text-primary); font-size: 1.2rem; margin-right: 30px; white-space: nowrap; user-select: none; flex-shrink: 0; }
+        .ribbon-title { position: sticky; left: 0; font-family: 'EB Garamond', serif; color: var(--text-primary); font-size: 1.2rem; padding-right: 30px; white-space: nowrap; user-select: none; flex-shrink: 0; background: linear-gradient(90deg, rgba(11,12,16,1) 80%, rgba(11,12,16,0) 100%); z-index: 2; }
         #legend-items { display: flex; align-items: center; gap: 25px; flex-shrink: 0; padding-right: 40px; }
         .legend-item { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.75rem; color: var(--text-muted); transition: all 0.2s; user-select: none; white-space: nowrap; text-transform: uppercase; letter-spacing: 1px; flex-shrink: 0; }
         
@@ -51,7 +60,7 @@
         .btn-toggle { pointer-events: auto; background: var(--accent); color: #000; border: none; padding: 15px 25px; border-radius: 8px; font-family: 'Inter', sans-serif; font-size: 0.9rem; text-transform: uppercase; font-weight: 600; letter-spacing: 1px; cursor: pointer; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3); transition: all 0.3s; height: fit-content; }
         .btn-toggle:hover { background: #e5c158; transform: translateY(-2px); }
 
-        #detail-panel { position: absolute; top: 0; right: -750px; width: 600px; height: 100%; background: var(--panel-bg); backdrop-filter: blur(20px); border-left: 1px solid #1f2229; padding: 80px 45px 120px 45px; box-sizing: border-box; transition: right 0.7s cubic-bezier(0.19, 1, 0.22, 1); overflow-y: auto; z-index: 100; box-shadow: -15px 0 40px rgba(0,0,0,0.9); }
+        #detail-panel { position: absolute; top: 0; right: -750px; width: 600px; height: 100%; background: var(--panel-bg); backdrop-filter: blur(20px); border-left: 1px solid #1f2229; padding: 80px 45px 120px 45px; box-sizing: border-box; transition: right 0.7s cubic-bezier(0.19, 1, 0.22, 1); overflow-y: auto; z-index: 100; box-shadow: -15px 0 40px rgba(0,0,0,0.9); display: flex; flex-direction: column; }
         #detail-panel.active { right: 0; }
         
         .close-btn { position: absolute; top: 30px; right: 40px; background: none; border: none; color: var(--text-muted); font-size: 32px; cursor: pointer; z-index: 102; }
@@ -154,11 +163,23 @@
         const defs = svg.append("defs");
         const xAxisGroup = g.append("g").attr("class", "axis").style("opacity", 0);
 
+        // Map vertical mouse scrolling to horizontal scroll for the infinite ribbon
         const topRibbon = document.getElementById('top-ribbon');
         topRibbon.addEventListener('wheel', (evt) => {
             evt.preventDefault();
             topRibbon.scrollLeft += evt.deltaY;
         }, { passive: false });
+
+        // Infinite Loop scrolling logic
+        topRibbon.addEventListener('scroll', () => {
+            // We cloned the list 4 times. If we scroll to the end of block 3 or start of block 1, jump seamlessly.
+            const quarter = topRibbon.scrollWidth / 4;
+            if (topRibbon.scrollLeft < quarter / 2) {
+                topRibbon.scrollLeft += quarter * 2;
+            } else if (topRibbon.scrollLeft > quarter * 2.5) {
+                topRibbon.scrollLeft -= quarter * 2;
+            }
+        });
 
         const strictNormalize = (str) => {
             if(!str) return "";
@@ -256,14 +277,23 @@
 
         function initGraph() {
             const legendContainer = document.getElementById('legend-items');
-            thematicSubjects.forEach((subject, index) => {
-                const item = document.createElement('div');
-                item.className = 'legend-item';
-                item.id = 'legend-subject-' + index;
-                item.onclick = () => toggleSubjectFilter(subject, index);
-                item.innerHTML = `<div class="legend-number">${index + 1}</div><span>${subject}</span>`;
-                legendContainer.appendChild(item);
-            });
+            
+            // Render the items 4 times to create enough width for the seamless infinite scroll illusion
+            for(let j=0; j<4; j++) {
+                thematicSubjects.forEach((subject, index) => {
+                    const item = document.createElement('div');
+                    item.className = 'legend-item';
+                    item.dataset.index = index; // Custom attribute to sync active states across clones
+                    item.onclick = () => toggleSubjectFilter(subject, index);
+                    item.innerHTML = `<div class="legend-number">${index + 1}</div><span>${subject}</span>`;
+                    legendContainer.appendChild(item);
+                });
+            }
+
+            // Start scroll position cleanly in the middle of the clones
+            setTimeout(() => {
+                topRibbon.scrollLeft = topRibbon.scrollWidth / 4;
+            }, 100);
 
             const degreeMap = {};
             globalLinks.forEach(l => { 
@@ -272,7 +302,9 @@
             });
 
             globalNodes.forEach(n => {
-                n.size = 10 + ((degreeMap[n.id] || 0) * 2.5);
+                // Dramatically scaled node sizes based on connection count
+                n.size = 8 + ((degreeMap[n.id] || 0) * 5); 
+                
                 if (n.domains.length > 1) {
                     const gradId = "grad-" + n.domains.join("").replace(/[^a-zA-Z0-9]/g, '');
                     n.fill = `url(#${gradId})`;
@@ -374,9 +406,11 @@
             } else {
                 currentSubjectFilter = subject;
                 d3.selectAll('.legend-item').classed('active', false);
-                document.getElementById('legend-subject-' + index).classList.add('active');
+                d3.selectAll('.legend-item').filter(function() { return parseInt(this.dataset.index) === index; }).classed('active', true);
                 
                 d3.selectAll('.graph-element').classed('dimmed', true).classed('highlighted', false);
+                d3.selectAll('.node-label').classed('large-label', false).classed('medium-label', false);
+                d3.selectAll('.force-visible').classed('force-visible', false);
                 
                 const cleanInputSubject = subject.toLowerCase().replace(/[^a-z0-9]/g, '');
                 const isMatch = (arr) => {
@@ -474,6 +508,8 @@
             presentationIndex = -1;
             document.getElementById('presentation-controls').classList.remove('active');
             d3.selectAll('.legend-item').classed('active', false);
+            d3.selectAll('.node-label').classed('large-label', false).classed('medium-label', false);
+            d3.selectAll('.force-visible').classed('force-visible', false);
         }
 
         function handleNodeHover(d) {
@@ -511,11 +547,21 @@
                 const connectedLinks = globalLinks.filter(l => l.source.id === d.id || l.target.id === d.id);
                 const connectedNodes = [d.id, ...connectedLinks.map(l => l.source.id === d.id ? l.target.id : l.source.id)];
 
+                // Standard highlight logic
                 globalNodeGroups.classed('dimmed', n => !connectedNodes.includes(n.id));
                 globalLinkPaths.classed('dimmed', true).classed('highlighted-link', false);
                 globalLinkPaths.filter(l => connectedLinks.includes(l)).classed('dimmed', false).classed('highlighted-link', true);
-                
                 globalLinkTexts.filter(l => connectedLinks.includes(l) && !isHiddenLink(l)).classed('show-labels', true);
+
+                // Absolutely force visibility of clicked node and ALL connections, overriding presentation/timeline filters
+                globalNodeGroups.classed('force-visible', n => connectedNodes.includes(n.id));
+                globalLinkPaths.classed('force-visible', l => connectedLinks.includes(l));
+                globalLinkTexts.classed('force-visible', l => connectedLinks.includes(l));
+
+                // Scale up text labels for readability during presentation
+                globalNodeGroups.selectAll('.node-label')
+                    .classed('large-label', n => n.id === d.id)
+                    .classed('medium-label', n => n.id !== d.id && connectedNodes.includes(n.id));
 
                 document.getElementById('panel-domain-container').innerHTML = d.domains.map(dom => `<div class="domain-tag" style="background:${domainColors[dom] || '#ffffff'}33; border-color:${domainColors[dom] || '#ffffff'}">${dom}</div>`).join('');
                 document.getElementById('panel-title').innerText = d.title;
@@ -564,6 +610,8 @@
             endPresentationMode();
             document.getElementById('detail-panel').classList.remove('active');
             d3.selectAll('.graph-element:not(.hidden-timeline)').classed('dimmed', false).classed('highlighted', false).classed('highlighted-link', false);
+            d3.selectAll('.node-label').classed('large-label', false).classed('medium-label', false);
+            d3.selectAll('.force-visible').classed('force-visible', false);
             svg.transition().duration(1000).call(zoom.transform, d3.zoomIdentity.translate(width/2, height/2).scale(0.55).translate(-width/2, -height/2));
             d3.selectAll('.link-label').classed('show-labels', false);
         }
