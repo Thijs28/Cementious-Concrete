@@ -7,47 +7,46 @@
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
-        :root { --bg-color: #0b0c10; --text-primary: #e0e6ed; --text-muted: #8b929a; --panel-bg: rgba(11, 12, 16, 0.96); --accent: #D4AF37; }
+        :root { 
+            --bg-color: #24272e; /* Dark Slate Gray */
+            --text-primary: #e0e6ed; 
+            --text-muted: #9aa2af; 
+            --panel-bg: rgba(26, 29, 36, 0.96); 
+            --accent: #D4AF37; 
+        }
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: var(--bg-color); color: var(--text-primary); font-family: 'Inter', sans-serif; overflow: hidden; }
         
         svg { user-select: none; -webkit-user-select: none; }
 
         #graph-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
         .node-circle { transition: stroke 0.3s, r 0.3s; cursor: pointer; }
-        .node-circle:hover { stroke: #ffffff !important; stroke-width: 2.5px !important; }
+        .node-circle:hover { stroke: var(--accent) !important; stroke-width: 3px !important; }
         
         .node-label { font-family: 'EB Garamond', serif; font-size: 14px; fill: var(--text-primary); pointer-events: none; text-shadow: 0 4px 12px rgba(0,0,0,1); transition: opacity 0.3s, font-size 0.4s, fill 0.4s, text-shadow 0.4s; user-select: none; }
         .node-label.large-label { font-size: 32px !important; font-weight: 600; fill: #ffffff; text-shadow: 0 4px 20px rgba(0,0,0,1), 0 0 15px rgba(212, 175, 55, 0.6) !important; }
         .node-label.medium-label { font-size: 20px !important; font-weight: 400; fill: #f0f4f8; text-shadow: 0 4px 15px rgba(0,0,0,1) !important; }
 
-        /* Increased base visibility of links */
-        .link-line { stroke: #545b68; stroke-opacity: 0.8; fill: none; transition: stroke-opacity 0.3s, stroke 0.3s, stroke-width 0.3s; }
-        .link-label { font-family: 'Inter', sans-serif; font-size: 9px; fill: #7a8288; text-transform: uppercase; letter-spacing: 1.5px; pointer-events: none; text-anchor: middle; font-weight: 600; text-shadow: 0 2px 4px rgba(0,0,0,0.9); opacity: 0; transition: opacity 0.3s; user-select: none; }
+        .link-line { stroke: #6b7280; fill: none; transition: stroke-opacity 0.3s, stroke 0.3s, stroke-width 0.3s; }
+        .link-label { font-family: 'Inter', sans-serif; font-size: 9px; fill: #9aa2af; text-transform: uppercase; letter-spacing: 1.5px; pointer-events: none; text-anchor: middle; font-weight: 600; text-shadow: 0 2px 4px rgba(0,0,0,0.9); opacity: 0; transition: opacity 0.3s; user-select: none; }
         
         .show-labels { opacity: 1 !important; }
-        .dimmed { opacity: 0.04 !important; transition: opacity 0.4s ease; filter: grayscale(100%); pointer-events: none; }
+        .dimmed { opacity: 0.05 !important; transition: opacity 0.4s ease; filter: grayscale(100%); pointer-events: none; }
         .highlighted { opacity: 1 !important; transition: opacity 0.4s ease; }
-        
-        /* Brightened highlighted links */
-        .highlighted-link { stroke: #9aa2af !important; stroke-opacity: 1 !important; stroke-width: 2px !important; }
-        .hidden-timeline { opacity: 0 !important; pointer-events: none !important; transition: opacity 0.5s ease; }
+        .highlighted-link { stroke: #cbd5e1 !important; stroke-opacity: 1 !important; }
         
         .force-visible { opacity: 1 !important; pointer-events: auto !important; filter: none !important; }
         
-        .axis line, .axis path { stroke: #333; }
-        .axis text { fill: #888; font-family: 'Inter', sans-serif; font-size: 14px; pointer-events: none; user-select: none; }
-        
         #top-ribbon {
             position: absolute; top: 0; left: 0; width: 100%; height: 60px;
-            background: rgba(11, 12, 16, 0.95); backdrop-filter: blur(15px);
-            border-bottom: 1px solid #1f2229; display: flex; align-items: center;
+            background: rgba(26, 29, 36, 0.95); backdrop-filter: blur(15px);
+            border-bottom: 1px solid #333945; display: flex; align-items: center;
             padding: 0 30px; box-sizing: border-box; z-index: 90;
             pointer-events: auto; overflow-x: auto; scrollbar-width: none;
             -webkit-overflow-scrolling: touch;
         }
         #top-ribbon::-webkit-scrollbar { display: none; }
         
-        .ribbon-title { position: sticky; left: 0; font-family: 'EB Garamond', serif; color: var(--text-primary); font-size: 1.2rem; padding-right: 30px; white-space: nowrap; user-select: none; flex-shrink: 0; background: linear-gradient(90deg, rgba(11,12,16,1) 80%, rgba(11,12,16,0) 100%); z-index: 2; }
+        .ribbon-title { position: sticky; left: 0; font-family: 'EB Garamond', serif; color: var(--text-primary); font-size: 1.2rem; padding-right: 30px; white-space: nowrap; user-select: none; flex-shrink: 0; background: linear-gradient(90deg, rgba(26, 29, 36, 1) 80%, rgba(26, 29, 36, 0) 100%); z-index: 2; }
         #legend-items { display: flex; align-items: center; gap: 25px; flex-shrink: 0; padding-right: 40px; }
         .legend-item { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.75rem; color: var(--text-muted); transition: all 0.2s; user-select: none; white-space: nowrap; text-transform: uppercase; letter-spacing: 1px; flex-shrink: 0; }
         
@@ -56,11 +55,17 @@
         .legend-number { width: 18px; height: 18px; border-radius: 50%; background: rgba(212, 175, 55, 0.1); border: 1px solid var(--accent); color: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 0.65rem; font-weight: bold; flex-shrink: 0; transition: all 0.3s; }
         .legend-item.active .legend-number { background: var(--accent); color: #000; }
         
-        #bottom-ui { position: absolute; bottom: 40px; left: 40px; z-index: 50; pointer-events: none; }
-        .btn-toggle { pointer-events: auto; background: var(--accent); color: #000; border: none; padding: 15px 25px; border-radius: 8px; font-family: 'Inter', sans-serif; font-size: 0.9rem; text-transform: uppercase; font-weight: 600; letter-spacing: 1px; cursor: pointer; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3); transition: all 0.3s; height: fit-content; }
-        .btn-toggle:hover { background: #e5c158; transform: translateY(-2px); }
+        /* Search Bar UI */
+        #search-container { position: absolute; bottom: 40px; left: 40px; z-index: 50; width: 320px; font-family: 'Inter', sans-serif; pointer-events: auto; }
+        #search-input { width: 100%; padding: 15px 20px; border-radius: 8px; border: 1px solid #3b4048; background: rgba(26, 29, 36, 0.85); color: #fff; font-family: 'Inter', sans-serif; font-size: 0.95rem; backdrop-filter: blur(15px); outline: none; transition: border-color 0.3s, box-shadow 0.3s; box-sizing: border-box; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        #search-input:focus { border-color: var(--accent); box-shadow: 0 4px 20px rgba(212, 175, 55, 0.2); }
+        #search-input::placeholder { color: #6b7280; }
+        #search-results { position: absolute; bottom: 100%; left: 0; width: 100%; background: rgba(26, 29, 36, 0.95); border: 1px solid #3b4048; border-radius: 8px; margin-bottom: 10px; max-height: 250px; overflow-y: auto; display: none; flex-direction: column; backdrop-filter: blur(15px); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .search-result-item { padding: 12px 20px; cursor: pointer; color: var(--text-muted); font-size: 0.85rem; border-bottom: 1px solid #2d313a; transition: background 0.2s; }
+        .search-result-item:last-child { border-bottom: none; }
+        .search-result-item:hover { background: rgba(212, 175, 55, 0.15); color: #fff; }
 
-        #detail-panel { position: absolute; top: 0; right: -750px; width: 600px; height: 100%; background: var(--panel-bg); backdrop-filter: blur(20px); border-left: 1px solid #1f2229; padding: 80px 45px 120px 45px; box-sizing: border-box; transition: right 0.7s cubic-bezier(0.19, 1, 0.22, 1); overflow-y: auto; z-index: 100; box-shadow: -15px 0 40px rgba(0,0,0,0.9); display: flex; flex-direction: column; }
+        #detail-panel { position: absolute; top: 0; right: -750px; width: 600px; height: 100%; background: var(--panel-bg); backdrop-filter: blur(20px); border-left: 1px solid #333945; padding: 80px 45px 120px 45px; box-sizing: border-box; transition: right 0.7s cubic-bezier(0.19, 1, 0.22, 1); overflow-y: auto; z-index: 100; box-shadow: -15px 0 40px rgba(0,0,0,0.5); display: flex; flex-direction: column; }
         #detail-panel.active { right: 0; }
         
         .close-btn { position: absolute; top: 30px; right: 40px; background: none; border: none; color: var(--text-muted); font-size: 32px; cursor: pointer; z-index: 102; }
@@ -68,31 +73,31 @@
         
         .domain-tag { display: inline-block; padding: 6px 14px; border: 1px solid #333; border-radius: 20px; font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: #fff; margin-bottom: 20px; margin-right: 8px;}
         h1 { font-family: 'EB Garamond', serif; font-size: 2.6rem; font-weight: 400; margin: 0 0 15px 0; }
-        .meta-data { font-size: 0.85rem; color: var(--text-muted); border-bottom: 1px solid #1f2229; padding-bottom: 20px; margin-bottom: 30px; text-transform: uppercase; letter-spacing: 1px;}
-        .media-container { width: 100%; aspect-ratio: 16/9; background: #000; margin-bottom: 30px; border-radius: 6px; overflow: hidden; border: 1px solid #1f2229; display: none; }
+        .meta-data { font-size: 0.85rem; color: var(--text-muted); border-bottom: 1px solid #333945; padding-bottom: 20px; margin-bottom: 30px; text-transform: uppercase; letter-spacing: 1px;}
+        .media-container { width: 100%; aspect-ratio: 16/9; background: #000; margin-bottom: 30px; border-radius: 6px; overflow: hidden; border: 1px solid #333945; display: none; }
         .media-container.active { display: block; }
         .media-container img { width: 100%; height: 100%; object-fit: cover; opacity: 0.85; }
         .content-body { font-size: 1.05rem; line-height: 1.7; font-weight: 300; color: #c4c9d0; margin-bottom: 30px; }
         
-        .interdependency-list { padding-top: 25px; border-top: 1px solid #1f2229; display: none; }
+        .interdependency-list { padding-top: 25px; border-top: 1px solid #333945; display: none; }
         .interdependency-list.active { display: block; }
         .interdependency-list h3 { font-family: 'EB Garamond', serif; font-size: 1.6rem; font-weight: 400; margin-bottom: 15px; }
-        .category-header { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1.5px; color: #6a737d; border-bottom: 1px solid #1f2229; padding-bottom: 5px; margin: 25px 0 15px 0; }
-        .interdependency-sentence { background: rgba(255,255,255,0.02); border: 1px solid #1f2229; padding: 18px; border-radius: 6px; margin-bottom: 12px; font-size: 1.05rem; line-height: 1.6; color: #a0a5ab; transition: background 0.2s; }
-        .interdependency-sentence:hover { background: rgba(255,255,255,0.04); border-color: #3b4048; }
+        .category-header { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1.5px; color: #8892a0; border-bottom: 1px solid #333945; padding-bottom: 5px; margin: 25px 0 15px 0; }
+        .interdependency-sentence { background: rgba(255,255,255,0.03); border: 1px solid #3b4048; padding: 18px; border-radius: 6px; margin-bottom: 12px; font-size: 1.05rem; line-height: 1.6; color: #b0b8c4; transition: background 0.2s; }
+        .interdependency-sentence:hover { background: rgba(255,255,255,0.06); border-color: #545b68; }
         .node-link { font-weight: 600; cursor: pointer; border-bottom: 1px dashed rgba(255,255,255,0.3); padding-bottom: 2px; transition: color 0.2s; }
         .node-link:hover { opacity: 0.7; }
-        .verb-text { font-style: italic; margin: 0 4px; color: #7a8288; }
+        .verb-text { font-style: italic; margin: 0 4px; color: #8892a0; }
 
         .toc-item { background: rgba(212, 175, 55, 0.05); border: 1px solid rgba(212, 175, 55, 0.2); padding: 15px 20px; border-radius: 6px; margin-bottom: 10px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: space-between; }
         .toc-item:hover { background: rgba(212, 175, 55, 0.15); border-color: var(--accent); transform: translateX(5px); }
         .toc-title { font-weight: 600; color: #fff; font-size: 1.1rem; }
         .toc-arrow { color: var(--accent); font-family: monospace; font-size: 1.2rem; }
 
-        #presentation-controls { position: fixed; bottom: 0; right: 0; width: 600px; background: #0b0c10; border-top: 1px solid #1f2229; padding: 20px 45px; box-sizing: border-box; display: flex; justify-content: space-between; align-items: center; transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.19, 1, 0.22, 1); z-index: 101; }
+        #presentation-controls { position: fixed; bottom: 0; right: 0; width: 600px; background: #1f2229; border-top: 1px solid #333945; padding: 20px 45px; box-sizing: border-box; display: flex; justify-content: space-between; align-items: center; transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.19, 1, 0.22, 1); z-index: 101; }
         #presentation-controls.active { transform: translateY(0); }
-        .pres-btn { background: #1f2229; color: #fff; border: 1px solid #333; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-family: 'Inter', sans-serif; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; transition: all 0.2s; }
-        .pres-btn:hover { background: #333; border-color: var(--accent); color: var(--accent); }
+        .pres-btn { background: #2d313a; color: #fff; border: 1px solid #474e5d; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-family: 'Inter', sans-serif; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; transition: all 0.2s; }
+        .pres-btn:hover { background: #3b4048; border-color: var(--accent); color: var(--accent); }
         .pres-btn:disabled { opacity: 0.3; cursor: not-allowed; }
         #pres-counter { font-family: 'Inter', sans-serif; font-size: 0.85rem; color: var(--text-muted); letter-spacing: 2px; text-transform: uppercase; }
     </style>
@@ -106,8 +111,9 @@
         <div id="legend-items"></div>
     </div>
     
-    <div id="bottom-ui">
-        <button id="timelineToggle" class="btn-toggle">View Chronology</button>
+    <div id="search-container">
+        <div id="search-results"></div>
+        <input type="text" id="search-input" placeholder="Search knowledge graph..." autocomplete="off">
     </div>
 
     <div id="detail-panel">
@@ -130,7 +136,16 @@
     </div>
 
     <script>
-        const domainColors = { "Core": "#D4AF37", "Scientific": "#5D8AA8", "Technical": "#CD7F32", "Historical": "#8B9A9A", "GeoPolitical": "#B24C4C", "Ecological": "#4A7A59", "Sensory": "#7A5C7A" };
+        // High-contrast, distinctive neon colors for the dark gray background
+        const domainColors = { 
+            "Core": "#FFC300",          
+            "Scientific": "#00E5FF",    
+            "Technical": "#FF3366",     
+            "Historical": "#B07DFF",    
+            "GeoPolitical": "#FF8C00",  
+            "Ecological": "#00FF66",    
+            "Sensory": "#FF00FF"        
+        };
         
         const thematicSubjects = [
             "Origins of Cement",
@@ -144,8 +159,6 @@
         ];
         
         let currentSubjectFilter = null;
-        let isTimelineMode = false;
-
         let presentationQueue = [];
         let presentationIndex = -1;
         
@@ -155,14 +168,13 @@
         const zoom = d3.zoom().scaleExtent([0.15, 4]).on("zoom", (event) => {
             g.attr("transform", event.transform);
             d3.selectAll('.link-label').classed('show-labels', event.transform.k > 1.2);
-            if (isTimelineMode) xAxisGroup.attr("transform", `translate(0, ${height/2 + 150})`);
         });
         
         const svg = d3.select("#graph-container").append("svg").attr("width", width).attr("height", height).call(zoom);
         const g = svg.append("g");
         const defs = svg.append("defs");
-        const xAxisGroup = g.append("g").attr("class", "axis").style("opacity", 0);
 
+        // Infinite Carousel logic
         const topRibbon = document.getElementById('top-ribbon');
         topRibbon.addEventListener('wheel', (evt) => {
             evt.preventDefault();
@@ -178,6 +190,7 @@
             }
         });
 
+        // Advanced string normalizer to defeat CSV formatting issues
         const strictNormalize = (str) => {
             if(!str) return "";
             return str.replace(/\u00A0/g, ' ') 
@@ -199,9 +212,6 @@
         let globalNodeGroups = null;
         let globalLinkPaths = null;
         let globalLinkTexts = null;
-
-        const isHiddenNode = (n) => isTimelineMode && n.year === null;
-        const isHiddenLink = (l) => isTimelineMode && (l.source.year === null || l.target.year === null);
 
         Promise.all([
             d3.text("nodes.csv"),
@@ -247,8 +257,7 @@
                     subjects: extractedSubjects,
                     meta: d.meta || "",
                     desc: d.desc || d.description || "",
-                    img: d.img || d.image || "",
-                    year: (d.year && d.year !== "") ? parseInt(d.year) : null
+                    img: d.img || d.image || ""
                 };
             }).filter(n => n.id !== "");
 
@@ -262,11 +271,14 @@
                     source: (d.source || "").replace(/\s/g, ''),
                     target: (d.target || "").replace(/\s/g, ''),
                     label: d.label || "relates to",
-                    category: d.category || "General"
+                    label_reverse: d.label_reverse || d.labelreverse || d.label_reverse || "",
+                    category: d.category || "General",
+                    strength: parseFloat(d.strength || d.weight) || 1
                 };
             }).filter(l => validNodeIds.has(l.source) && validNodeIds.has(l.target));
 
             initGraph();
+            initSearch();
         }).catch(error => {
             console.error("Error loading CSV files:", error);
             document.getElementById('graph-container').innerHTML = `<h2 style="color:white; padding:50px;">Error Loading CSVs. Check console for details.</h2>`;
@@ -297,7 +309,6 @@
             });
 
             globalNodes.forEach(n => {
-                // Slower scaling multiplier for nodes closer in size
                 n.size = 12 + ((degreeMap[n.id] || 0) * 2.5); 
                 
                 if (n.domains.length > 1) {
@@ -320,8 +331,13 @@
                 .force("center", d3.forceCenter(width / 2, height / 2))
                 .force("collide", d3.forceCollide().radius(d => d.size * 1.5 + 25));
 
-            globalLinkPaths = g.append("g").selectAll("path").data(globalLinks).join("path").attr("class", "link-line").attr("stroke-width", 1.5);
-            globalLinkTexts = g.append("g").selectAll("text").data(globalLinks).join("text").attr("class", "link-label").text(d => d.label);
+            globalLinkPaths = g.append("g").selectAll("path").data(globalLinks).join("path")
+                .attr("class", "link-line")
+                .attr("stroke-width", d => 1 + (d.strength * 0.5)) // Modifies line thickness via strength column
+                .style("stroke-opacity", d => Math.min(1, 0.4 + (d.strength * 0.1)));
+
+            globalLinkTexts = g.append("g").selectAll("text").data(globalLinks).join("text")
+                .attr("class", "link-label").text(d => d.label);
 
             globalNodeGroups = g.append("g").selectAll("g").data(globalNodes).join("g").attr("class", "node graph-element")
                 .call(d3.drag().on("start", dragstart).on("drag", dragged).on("end", dragend))
@@ -334,8 +350,10 @@
                 .on("mouseover", (e, d) => handleNodeHover(d))
                 .on("mouseout", () => handleNodeOut());
 
+            // Added solid white 2px stroke to ALL nodes
             globalNodeGroups.append("circle").attr("class", "node-circle").attr("r", d => d.size)
-                .attr("fill", d => d.fill).attr("stroke", d => d.fill.includes("url") ? "#ffffff" : d.fill).attr("stroke-width", d => d.domains.includes("Core") ? 0 : 1.5);
+                .attr("fill", d => d.fill).attr("stroke", "#ffffff").attr("stroke-width", 2);
+                
             globalNodeGroups.append("text").attr("class", "node-label").attr("dx", d => d.size + 12).attr("dy", 5).text(d => d.title);
 
             simulation.on("tick", () => {
@@ -348,45 +366,53 @@
                 globalNodeGroups.attr("transform", d => `translate(${d.x},${d.y})`);
             });
 
-            const xScale = d3.scaleLinear().domain([1800, 2030]).range([-width, width * 2]);
-            const xAxis = d3.axisBottom(xScale).tickFormat(d3.format("d")).ticks(10);
-            xAxisGroup.call(xAxis);
-
-            document.getElementById('timelineToggle').addEventListener('click', function() {
-                isTimelineMode = !isTimelineMode;
-                this.innerText = isTimelineMode ? "View Network Matrix" : "View Chronology";
-                
-                if (isTimelineMode) {
-                    xAxisGroup.transition().duration(1000).style("opacity", 1);
-                    globalNodeGroups.filter(d => d.year === null).classed('hidden-timeline', true);
-                    globalLinkPaths.filter(l => l.source.year === null || l.target.year === null).classed('hidden-timeline', true);
-                    globalLinkTexts.filter(l => l.source.year === null || l.target.year === null).classed('hidden-timeline', true);
-
-                    simulation
-                        .force("x", d3.forceX(d => d.year !== null ? xScale(d.year) : 0).strength(d => d.year !== null ? 1 : 0))
-                        .force("y", d3.forceY(height / 2).strength(d => d.year !== null ? 0.1 : 0))
-                        .force("center", null)
-                        .alpha(1).restart();
-                        
-                    svg.transition().duration(1000).call(zoom.transform, d3.zoomIdentity.translate(width/2, height/2).scale(0.4).translate(-width/2, -height/2));
-                } else {
-                    xAxisGroup.transition().duration(1000).style("opacity", 0);
-                    globalNodeGroups.classed('hidden-timeline', false);
-                    globalLinkPaths.classed('hidden-timeline', false);
-                    
-                    simulation
-                        .force("x", null).force("y", null)
-                        .force("center", d3.forceCenter(width / 2, height / 2))
-                        .alpha(1).restart();
-                }
-            });
-
             svg.call(zoom.transform, d3.zoomIdentity.translate(width / 2, height / 2).scale(0.55).translate(-width/2, -height/2));
             
             window.jumpToNodeUI = (nodeId) => {
                 const target = globalNodes.find(n => n.id === nodeId);
                 if(target) handleNodeClick(target);
             };
+        }
+
+        // Search Bar Logic
+        function initSearch() {
+            const searchInput = document.getElementById('search-input');
+            const searchResults = document.getElementById('search-results');
+            
+            searchInput.addEventListener('input', (e) => {
+                const query = e.target.value.toLowerCase().trim();
+                searchResults.innerHTML = '';
+                
+                if (query === '') {
+                    searchResults.style.display = 'none';
+                    return;
+                }
+                
+                const matches = globalNodes.filter(n => n.title.toLowerCase().includes(query)).slice(0, 8);
+                if (matches.length > 0) {
+                    searchResults.style.display = 'flex';
+                    matches.forEach(m => {
+                        const div = document.createElement('div');
+                        div.className = 'search-result-item';
+                        div.innerText = m.title;
+                        div.onclick = () => {
+                            searchInput.value = "";
+                            searchResults.style.display = 'none';
+                            endPresentationMode();
+                            handleNodeClick(m);
+                        };
+                        searchResults.appendChild(div);
+                    });
+                } else {
+                    searchResults.style.display = 'none';
+                }
+            });
+            
+            document.addEventListener('click', (e) => {
+                if(!e.target.closest('#search-container')) {
+                    searchResults.style.display = 'none';
+                }
+            });
         }
 
         function dragstart(e, d) { if (!e.active) simulation.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; }
@@ -415,8 +441,8 @@
                     });
                 };
                 
-                globalNodeGroups.filter(n => isMatch(n.subjects) && !isHiddenNode(n)).classed('dimmed', false).classed('highlighted', true);
-                globalLinkPaths.filter(l => isMatch(l.source.subjects) && isMatch(l.target.subjects) && !isHiddenLink(l)).classed('dimmed', false);
+                globalNodeGroups.filter(n => isMatch(n.subjects)).classed('dimmed', false).classed('highlighted', true);
+                globalLinkPaths.filter(l => isMatch(l.source.subjects) && isMatch(l.target.subjects)).classed('dimmed', false);
                 
                 presentationQueue = globalNodes.filter(n => isMatch(n.subjects));
                 
@@ -439,14 +465,14 @@
                 document.getElementById('panel-desc').innerHTML = tocHTML;
                 document.getElementById('detail-panel').classList.add('active');
 
-                // Dynamic bounding box zoom to fit all highlighted items
-                if (presentationQueue.length > 0 && !isTimelineMode) {
+                // Dynamic Bounding Box Camera calculation
+                if (presentationQueue.length > 0) {
                     const minX = d3.min(presentationQueue, d => d.x);
                     const maxX = d3.max(presentationQueue, d => d.x);
                     const minY = d3.min(presentationQueue, d => d.y);
                     const maxY = d3.max(presentationQueue, d => d.y);
 
-                    const dx = Math.max(maxX - minX, 150); // Minimum threshold to prevent over-zooming single nodes
+                    const dx = Math.max(maxX - minX, 150); 
                     const dy = Math.max(maxY - minY, 150);
                     
                     const viewWidth = width > 800 ? width - 600 : width;
@@ -531,7 +557,7 @@
             globalLinkPaths.classed('dimmed', true); globalLinkTexts.classed('show-labels', false);
             globalLinkPaths.filter(l => connectedLinks.includes(l)).classed('dimmed', false).classed('highlighted-link', true);
             
-            globalLinkTexts.filter(l => connectedLinks.includes(l) && !isHiddenLink(l)).classed('show-labels', true);
+            globalLinkTexts.filter(l => connectedLinks.includes(l)).classed('show-labels', true);
         }
 
         function handleNodeOut() {
@@ -550,18 +576,34 @@
                 } else {
                     updatePresentationControls(); 
                 }
-                
-                const offsetX = width > 800 ? (width - 600) / 2 : width / 3;
-                svg.transition().duration(1000).call(zoom.transform, d3.zoomIdentity.translate(offsetX, height/2).scale(0.85).translate(-d.x, -d.y));
 
                 const connectedLinks = globalLinks.filter(l => l.source.id === d.id || l.target.id === d.id);
                 const connectedNodes = [d.id, ...connectedLinks.map(l => l.source.id === d.id ? l.target.id : l.source.id)];
 
+                // Bounding Box Smart Zooming for active node + connections
+                const targetNodesData = globalNodes.filter(n => connectedNodes.includes(n.id));
+                const minX = d3.min(targetNodesData, n => n.x);
+                const maxX = d3.max(targetNodesData, n => n.x);
+                const minY = d3.min(targetNodesData, n => n.y);
+                const maxY = d3.max(targetNodesData, n => n.y);
+
+                const dx = Math.max(maxX - minX, 200); 
+                const dy = Math.max(maxY - minY, 200);
+                
+                const viewWidth = width > 800 ? width - 600 : width;
+                const viewHeight = height;
+                
+                const scale = Math.max(0.2, Math.min(1.2, 0.65 * Math.min(viewWidth / dx, viewHeight / dy)));
+                const cx = (minX + maxX) / 2;
+                const cy = (minY + maxY) / 2;
+                const offsetX = width > 800 ? (width - 600) / 2 : width / 2;
+                
+                svg.transition().duration(1000).call(zoom.transform, d3.zoomIdentity.translate(offsetX, height/2).scale(scale).translate(-cx, -cy));
+
                 globalNodeGroups.classed('dimmed', n => !connectedNodes.includes(n.id));
                 globalLinkPaths.classed('dimmed', true).classed('highlighted-link', false);
                 globalLinkPaths.filter(l => connectedLinks.includes(l)).classed('dimmed', false).classed('highlighted-link', true);
-                
-                globalLinkTexts.filter(l => connectedLinks.includes(l) && !isHiddenLink(l)).classed('show-labels', true);
+                globalLinkTexts.filter(l => connectedLinks.includes(l)).classed('show-labels', true);
 
                 globalNodeGroups.classed('force-visible', n => connectedNodes.includes(n.id));
                 globalLinkPaths.classed('force-visible', l => connectedLinks.includes(l));
@@ -600,10 +642,13 @@
                         const related = isSrc ? l.target : l.source;
                         if(!related || !related.id) return;
                         
+                        // Smart Directional Logic reading from 'label_reverse' column
+                        const verb = isSrc ? l.label : (l.label_reverse || `is ${l.label} by`);
+                        
                         linksHTML += `
                         <div class="interdependency-sentence">
                             <span class="node-link" style="color:${d.fallbackColor}" onclick="window.jumpToNodeUI('${d.id}')">${d.title}</span> 
-                            <span class="verb-text">${isSrc ? l.label : "is "+l.label+" by"}</span> 
+                            <span class="verb-text">${verb}</span> 
                             <span class="node-link" style="color:${related.fallbackColor}" onclick="window.jumpToNodeUI('${related.id}')">${related.title}</span>.
                         </div>`;
                     });
@@ -617,7 +662,7 @@
         function resetGraph() {
             endPresentationMode();
             document.getElementById('detail-panel').classList.remove('active');
-            d3.selectAll('.graph-element:not(.hidden-timeline)').classed('dimmed', false).classed('highlighted', false).classed('highlighted-link', false);
+            d3.selectAll('.graph-element').classed('dimmed', false).classed('highlighted', false).classed('highlighted-link', false);
             d3.selectAll('.node-label').classed('large-label', false).classed('medium-label', false);
             d3.selectAll('.force-visible').classed('force-visible', false);
             svg.transition().duration(1000).call(zoom.transform, d3.zoomIdentity.translate(width/2, height/2).scale(0.55).translate(-width/2, -height/2));
