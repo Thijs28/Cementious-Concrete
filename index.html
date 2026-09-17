@@ -16,27 +16,27 @@
         .node-circle { transition: stroke 0.3s, r 0.3s; cursor: pointer; }
         .node-circle:hover { stroke: #ffffff !important; stroke-width: 2.5px !important; }
         
-        /* Node label scaling transitions */
         .node-label { font-family: 'EB Garamond', serif; font-size: 14px; fill: var(--text-primary); pointer-events: none; text-shadow: 0 4px 12px rgba(0,0,0,1); transition: opacity 0.3s, font-size 0.4s, fill 0.4s, text-shadow 0.4s; user-select: none; }
         .node-label.large-label { font-size: 32px !important; font-weight: 600; fill: #ffffff; text-shadow: 0 4px 20px rgba(0,0,0,1), 0 0 15px rgba(212, 175, 55, 0.6) !important; }
         .node-label.medium-label { font-size: 20px !important; font-weight: 400; fill: #f0f4f8; text-shadow: 0 4px 15px rgba(0,0,0,1) !important; }
 
-        .link-line { stroke: #2a2d34; stroke-opacity: 0.6; fill: none; transition: stroke-opacity 0.3s, stroke 0.3s; }
+        /* Increased base visibility of links */
+        .link-line { stroke: #545b68; stroke-opacity: 0.8; fill: none; transition: stroke-opacity 0.3s, stroke 0.3s, stroke-width 0.3s; }
         .link-label { font-family: 'Inter', sans-serif; font-size: 9px; fill: #7a8288; text-transform: uppercase; letter-spacing: 1.5px; pointer-events: none; text-anchor: middle; font-weight: 600; text-shadow: 0 2px 4px rgba(0,0,0,0.9); opacity: 0; transition: opacity 0.3s; user-select: none; }
         
         .show-labels { opacity: 1 !important; }
         .dimmed { opacity: 0.04 !important; transition: opacity 0.4s ease; filter: grayscale(100%); pointer-events: none; }
         .highlighted { opacity: 1 !important; transition: opacity 0.4s ease; }
-        .highlighted-link { stroke: #666 !important; stroke-opacity: 0.9 !important; stroke-width: 1.5px !important; }
+        
+        /* Brightened highlighted links */
+        .highlighted-link { stroke: #9aa2af !important; stroke-opacity: 1 !important; stroke-width: 2px !important; }
         .hidden-timeline { opacity: 0 !important; pointer-events: none !important; transition: opacity 0.5s ease; }
         
-        /* Force visibility override when explicitly clicked */
         .force-visible { opacity: 1 !important; pointer-events: auto !important; filter: none !important; }
         
         .axis line, .axis path { stroke: #333; }
         .axis text { fill: #888; font-family: 'Inter', sans-serif; font-size: 14px; pointer-events: none; user-select: none; }
         
-        /* Horizontal Top Ribbon - Infinite Scroll Edition */
         #top-ribbon {
             position: absolute; top: 0; left: 0; width: 100%; height: 60px;
             background: rgba(11, 12, 16, 0.95); backdrop-filter: blur(15px);
@@ -163,16 +163,13 @@
         const defs = svg.append("defs");
         const xAxisGroup = g.append("g").attr("class", "axis").style("opacity", 0);
 
-        // Map vertical mouse scrolling to horizontal scroll for the infinite ribbon
         const topRibbon = document.getElementById('top-ribbon');
         topRibbon.addEventListener('wheel', (evt) => {
             evt.preventDefault();
             topRibbon.scrollLeft += evt.deltaY;
         }, { passive: false });
 
-        // Infinite Loop scrolling logic
         topRibbon.addEventListener('scroll', () => {
-            // We cloned the list 4 times. If we scroll to the end of block 3 or start of block 1, jump seamlessly.
             const quarter = topRibbon.scrollWidth / 4;
             if (topRibbon.scrollLeft < quarter / 2) {
                 topRibbon.scrollLeft += quarter * 2;
@@ -278,19 +275,17 @@
         function initGraph() {
             const legendContainer = document.getElementById('legend-items');
             
-            // Render the items 4 times to create enough width for the seamless infinite scroll illusion
             for(let j=0; j<4; j++) {
                 thematicSubjects.forEach((subject, index) => {
                     const item = document.createElement('div');
                     item.className = 'legend-item';
-                    item.dataset.index = index; // Custom attribute to sync active states across clones
+                    item.dataset.index = index; 
                     item.onclick = () => toggleSubjectFilter(subject, index);
                     item.innerHTML = `<div class="legend-number">${index + 1}</div><span>${subject}</span>`;
                     legendContainer.appendChild(item);
                 });
             }
 
-            // Start scroll position cleanly in the middle of the clones
             setTimeout(() => {
                 topRibbon.scrollLeft = topRibbon.scrollWidth / 4;
             }, 100);
@@ -302,8 +297,8 @@
             });
 
             globalNodes.forEach(n => {
-                // Dramatically scaled node sizes based on connection count
-                n.size = 8 + ((degreeMap[n.id] || 0) * 5); 
+                // Slower scaling multiplier for nodes closer in size
+                n.size = 12 + ((degreeMap[n.id] || 0) * 2.5); 
                 
                 if (n.domains.length > 1) {
                     const gradId = "grad-" + n.domains.join("").replace(/[^a-zA-Z0-9]/g, '');
@@ -444,11 +439,26 @@
                 document.getElementById('panel-desc').innerHTML = tocHTML;
                 document.getElementById('detail-panel').classList.add('active');
 
+                // Dynamic bounding box zoom to fit all highlighted items
                 if (presentationQueue.length > 0 && !isTimelineMode) {
-                    const cx = (d3.min(presentationQueue, d => d.x) + d3.max(presentationQueue, d => d.x)) / 2;
-                    const cy = (d3.min(presentationQueue, d => d.y) + d3.max(presentationQueue, d => d.y)) / 2;
-                    const offsetX = width > 800 ? (width - 600) / 2 : width / 3;
-                    svg.transition().duration(1000).call(zoom.transform, d3.zoomIdentity.translate(offsetX, height/2).scale(0.85).translate(-cx, -cy));
+                    const minX = d3.min(presentationQueue, d => d.x);
+                    const maxX = d3.max(presentationQueue, d => d.x);
+                    const minY = d3.min(presentationQueue, d => d.y);
+                    const maxY = d3.max(presentationQueue, d => d.y);
+
+                    const dx = Math.max(maxX - minX, 150); // Minimum threshold to prevent over-zooming single nodes
+                    const dy = Math.max(maxY - minY, 150);
+                    
+                    const viewWidth = width > 800 ? width - 600 : width;
+                    const viewHeight = height;
+                    
+                    const scale = Math.max(0.2, Math.min(1.2, 0.75 * Math.min(viewWidth / dx, viewHeight / dy)));
+                    
+                    const cx = (minX + maxX) / 2;
+                    const cy = (minY + maxY) / 2;
+                    const offsetX = width > 800 ? (width - 600) / 2 : width / 2;
+                    
+                    svg.transition().duration(1000).call(zoom.transform, d3.zoomIdentity.translate(offsetX, height/2).scale(scale).translate(-cx, -cy));
                 }
 
                 presentationIndex = -1;
@@ -547,18 +557,16 @@
                 const connectedLinks = globalLinks.filter(l => l.source.id === d.id || l.target.id === d.id);
                 const connectedNodes = [d.id, ...connectedLinks.map(l => l.source.id === d.id ? l.target.id : l.source.id)];
 
-                // Standard highlight logic
                 globalNodeGroups.classed('dimmed', n => !connectedNodes.includes(n.id));
                 globalLinkPaths.classed('dimmed', true).classed('highlighted-link', false);
                 globalLinkPaths.filter(l => connectedLinks.includes(l)).classed('dimmed', false).classed('highlighted-link', true);
+                
                 globalLinkTexts.filter(l => connectedLinks.includes(l) && !isHiddenLink(l)).classed('show-labels', true);
 
-                // Absolutely force visibility of clicked node and ALL connections, overriding presentation/timeline filters
                 globalNodeGroups.classed('force-visible', n => connectedNodes.includes(n.id));
                 globalLinkPaths.classed('force-visible', l => connectedLinks.includes(l));
                 globalLinkTexts.classed('force-visible', l => connectedLinks.includes(l));
 
-                // Scale up text labels for readability during presentation
                 globalNodeGroups.selectAll('.node-label')
                     .classed('large-label', n => n.id === d.id)
                     .classed('medium-label', n => n.id !== d.id && connectedNodes.includes(n.id));
