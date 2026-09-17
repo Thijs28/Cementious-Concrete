@@ -177,3 +177,12 @@ Oil_Cements,From_Hydraulic_Lime_to_Portland_Cement,influences search for,search 
 Mass_Production,Cement_industry_production,drives,is driven by,3,Industrial development
 Cement_standarisation,"Standardisation,_Scale_and_Changing_Properties",initiates,is initiated by,2,Standardisation
 "Standardisation,_Scale_and_Changing_Properties",Specialisation_of_portland_cements,enables,is enabled by,2,Cement development
+Kiln_Reactions_Phase,Step_5_Calcination_&_clinker,details the chemistry of,is chemically detailed by,3,Transformation
+Calcination_Reaction,Kiln_Reactions_Phase,initiates,is initiated by,2,Transformation
+C2S_Reaction,Kiln_Reactions_Phase,occurs during,contains,2,Transformation
+C3S_Reaction,Kiln_Reactions_Phase,occurs during,contains,2,Transformation
+C3A_Reaction,Kiln_Reactions_Phase,occurs during,contains,2,Transformation
+C4AF_Reaction,Kiln_Reactions_Phase,occurs during,contains,2,Transformation
+Calcination_Reaction,carbon_footprint,generates 60% of,is generated via,3,Ecological
+C2S_Reaction,Belite,produces,is produced by,3,Scientific
+C3S_Reaction,Alite,produces,is produced by,3,Scientific
