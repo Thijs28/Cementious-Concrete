@@ -8,7 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
         :root { 
-            --bg-color: #24272e; /* Dark Slate Gray */
+            --bg-color: #24272e; 
             --text-primary: #e0e6ed; 
             --text-muted: #9aa2af; 
             --panel-bg: rgba(26, 29, 36, 0.96); 
@@ -23,6 +23,7 @@
         .node-circle:hover { stroke: var(--accent) !important; stroke-width: 3px !important; }
         
         .node-label { font-family: 'EB Garamond', serif; font-size: 14px; fill: var(--text-primary); pointer-events: none; text-shadow: 0 4px 12px rgba(0,0,0,1); transition: opacity 0.3s, font-size 0.4s, fill 0.4s, text-shadow 0.4s; user-select: none; }
+        .node-label.hub-label { font-size: 22px !important; font-weight: 600; fill: #ffffff; text-shadow: 0 4px 15px rgba(0,0,0,1) !important; }
         .node-label.large-label { font-size: 32px !important; font-weight: 600; fill: #ffffff; text-shadow: 0 4px 20px rgba(0,0,0,1), 0 0 15px rgba(212, 175, 55, 0.6) !important; }
         .node-label.medium-label { font-size: 20px !important; font-weight: 400; fill: #f0f4f8; text-shadow: 0 4px 15px rgba(0,0,0,1) !important; }
 
@@ -55,7 +56,6 @@
         .legend-number { width: 18px; height: 18px; border-radius: 50%; background: rgba(212, 175, 55, 0.1); border: 1px solid var(--accent); color: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 0.65rem; font-weight: bold; flex-shrink: 0; transition: all 0.3s; }
         .legend-item.active .legend-number { background: var(--accent); color: #000; }
         
-        /* Search Bar UI */
         #search-container { position: absolute; bottom: 40px; left: 40px; z-index: 50; width: 320px; font-family: 'Inter', sans-serif; pointer-events: auto; }
         #search-input { width: 100%; padding: 15px 20px; border-radius: 8px; border: 1px solid #3b4048; background: rgba(26, 29, 36, 0.85); color: #fff; font-family: 'Inter', sans-serif; font-size: 0.95rem; backdrop-filter: blur(15px); outline: none; transition: border-color 0.3s, box-shadow 0.3s; box-sizing: border-box; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
         #search-input:focus { border-color: var(--accent); box-shadow: 0 4px 20px rgba(212, 175, 55, 0.2); }
@@ -136,7 +136,6 @@
     </div>
 
     <script>
-        // High-contrast, distinctive neon colors for the dark gray background
         const domainColors = { 
             "Core": "#FFC300",          
             "Scientific": "#00E5FF",    
@@ -174,7 +173,6 @@
         const g = svg.append("g");
         const defs = svg.append("defs");
 
-        // Infinite Carousel logic
         const topRibbon = document.getElementById('top-ribbon');
         topRibbon.addEventListener('wheel', (evt) => {
             evt.preventDefault();
@@ -190,7 +188,6 @@
             }
         });
 
-        // Advanced string normalizer to defeat CSV formatting issues
         const strictNormalize = (str) => {
             if(!str) return "";
             return str.replace(/\u00A0/g, ' ') 
@@ -228,7 +225,6 @@
 
             const rawNodes = parseCSV(rawNodesText);
             const rawLinks = parseCSV(rawLinksText);
-
             const cleanKey = (k) => k.replace(/^\uFEFF/, '').trim().toLowerCase();
 
             globalNodes = rawNodes.map(obj => {
@@ -310,6 +306,7 @@
 
             globalNodes.forEach(n => {
                 n.size = 12 + ((degreeMap[n.id] || 0) * 2.5); 
+                n.isHub = (degreeMap[n.id] || 0) > 5; 
                 
                 if (n.domains.length > 1) {
                     const gradId = "grad-" + n.domains.join("").replace(/[^a-zA-Z0-9]/g, '');
@@ -333,7 +330,7 @@
 
             globalLinkPaths = g.append("g").selectAll("path").data(globalLinks).join("path")
                 .attr("class", "link-line")
-                .attr("stroke-width", d => 1 + (d.strength * 0.5)) // Modifies line thickness via strength column
+                .attr("stroke-width", d => 1 + (d.strength * 0.5))
                 .style("stroke-opacity", d => Math.min(1, 0.4 + (d.strength * 0.1)));
 
             globalLinkTexts = g.append("g").selectAll("text").data(globalLinks).join("text")
@@ -344,17 +341,17 @@
                 .on("click", (e, d) => {
                     if(!presentationQueue.includes(d)) endPresentationMode(); 
                     else presentationIndex = presentationQueue.indexOf(d); 
-                    
                     handleNodeClick(d);
                 })
                 .on("mouseover", (e, d) => handleNodeHover(d))
                 .on("mouseout", () => handleNodeOut());
 
-            // Added solid white 2px stroke to ALL nodes
             globalNodeGroups.append("circle").attr("class", "node-circle").attr("r", d => d.size)
                 .attr("fill", d => d.fill).attr("stroke", "#ffffff").attr("stroke-width", 2);
                 
-            globalNodeGroups.append("text").attr("class", "node-label").attr("dx", d => d.size + 12).attr("dy", 5).text(d => d.title);
+            globalNodeGroups.append("text").attr("class", "node-label")
+                .classed("hub-label", d => d.isHub) 
+                .attr("dx", d => d.size + 12).attr("dy", 5).text(d => d.title);
 
             simulation.on("tick", () => {
                 globalLinkPaths.attr("d", d => `M${d.source.x},${d.source.y} L${d.target.x},${d.target.y}`);
@@ -374,7 +371,6 @@
             };
         }
 
-        // Search Bar Logic
         function initSearch() {
             const searchInput = document.getElementById('search-input');
             const searchResults = document.getElementById('search-results');
@@ -430,7 +426,12 @@
                 d3.selectAll('.legend-item').filter(function() { return parseInt(this.dataset.index) === index; }).classed('active', true);
                 
                 d3.selectAll('.graph-element').classed('dimmed', true).classed('highlighted', false);
-                d3.selectAll('.node-label').classed('large-label', false).classed('medium-label', false);
+                
+                d3.selectAll('.node-label')
+                    .classed('large-label', false)
+                    .classed('medium-label', false)
+                    .classed('hub-label', false); 
+                    
                 d3.selectAll('.force-visible').classed('force-visible', false);
                 
                 const cleanInputSubject = subject.toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -465,7 +466,6 @@
                 document.getElementById('panel-desc').innerHTML = tocHTML;
                 document.getElementById('detail-panel').classList.add('active');
 
-                // Dynamic Bounding Box Camera calculation
                 if (presentationQueue.length > 0) {
                     const minX = d3.min(presentationQueue, d => d.x);
                     const maxX = d3.max(presentationQueue, d => d.x);
@@ -546,6 +546,10 @@
             d3.selectAll('.legend-item').classed('active', false);
             d3.selectAll('.node-label').classed('large-label', false).classed('medium-label', false);
             d3.selectAll('.force-visible').classed('force-visible', false);
+            
+            if(globalNodeGroups) {
+                globalNodeGroups.selectAll('.node-label').classed('hub-label', d => d.isHub);
+            }
         }
 
         function handleNodeHover(d) {
@@ -554,7 +558,7 @@
             const connectedNodes = [d.id, ...connectedLinks.map(l => l.source.id === d.id ? l.target.id : l.source.id)];
             
             globalNodeGroups.classed('dimmed', n => !connectedNodes.includes(n.id));
-            globalLinkPaths.classed('dimmed', true); globalLinkTexts.classed('show-labels', false);
+            globalLinkPaths.classed('dimmed', true).classed('highlighted-link', false);
             globalLinkPaths.filter(l => connectedLinks.includes(l)).classed('dimmed', false).classed('highlighted-link', true);
             
             globalLinkTexts.filter(l => connectedLinks.includes(l)).classed('show-labels', true);
@@ -580,7 +584,6 @@
                 const connectedLinks = globalLinks.filter(l => l.source.id === d.id || l.target.id === d.id);
                 const connectedNodes = [d.id, ...connectedLinks.map(l => l.source.id === d.id ? l.target.id : l.source.id)];
 
-                // Bounding Box Smart Zooming for active node + connections
                 const targetNodesData = globalNodes.filter(n => connectedNodes.includes(n.id));
                 const minX = d3.min(targetNodesData, n => n.x);
                 const maxX = d3.max(targetNodesData, n => n.x);
@@ -610,6 +613,7 @@
                 globalLinkTexts.classed('force-visible', l => connectedLinks.includes(l));
 
                 globalNodeGroups.selectAll('.node-label')
+                    .classed('hub-label', false)
                     .classed('large-label', n => n.id === d.id)
                     .classed('medium-label', n => n.id !== d.id && connectedNodes.includes(n.id));
 
@@ -642,7 +646,6 @@
                         const related = isSrc ? l.target : l.source;
                         if(!related || !related.id) return;
                         
-                        // Smart Directional Logic reading from 'label_reverse' column
                         const verb = isSrc ? l.label : (l.label_reverse || `is ${l.label} by`);
                         
                         linksHTML += `
@@ -662,10 +665,29 @@
         function resetGraph() {
             endPresentationMode();
             document.getElementById('detail-panel').classList.remove('active');
-            d3.selectAll('.graph-element').classed('dimmed', false).classed('highlighted', false).classed('highlighted-link', false);
+            d3.selectAll('.graph-element').classed('dimmed', false).classed('highlighted', false);
+            d3.selectAll('.link-line').classed('dimmed', false).classed('highlighted-link', false).classed('force-visible', false);
+            
             d3.selectAll('.node-label').classed('large-label', false).classed('medium-label', false);
             d3.selectAll('.force-visible').classed('force-visible', false);
-            svg.transition().duration(1000).call(zoom.transform, d3.zoomIdentity.translate(width/2, height/2).scale(0.55).translate(-width/2, -height/2));
+            
+            const visibleNodes = globalNodes;
+            if (visibleNodes.length > 0) {
+                const minX = d3.min(visibleNodes, n => n.x);
+                const maxX = d3.max(visibleNodes, n => n.x);
+                const minY = d3.min(visibleNodes, n => n.y);
+                const maxY = d3.max(visibleNodes, n => n.y);
+
+                const dx = Math.max(maxX - minX, width / 2); 
+                const dy = Math.max(maxY - minY, height / 2);
+                
+                const scale = Math.max(0.15, Math.min(1.0, 0.85 * Math.min(width / dx, height / dy)));
+                const cx = (minX + maxX) / 2;
+                const cy = (minY + maxY) / 2;
+                
+                svg.transition().duration(1000).call(zoom.transform, d3.zoomIdentity.translate(width / 2, height / 2).scale(scale).translate(-cx, -cy));
+            }
+            
             d3.selectAll('.link-label').classed('show-labels', false);
         }
     </script>
