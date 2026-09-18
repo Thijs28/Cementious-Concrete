@@ -224,7 +224,6 @@
                 return d3.dsvFormat(delimiter).parse(text);
             };
 
-            // Dynamically load the spreadsheet presentation playlists
             if (rawPresText && rawPresText.trim() !== "") {
                 const rawPres = parseCSV(rawPresText);
                 rawPres.forEach(row => {
@@ -238,7 +237,7 @@
                     if (section && nodeId) {
                         if (!presentationData[section]) {
                             presentationData[section] = [];
-                            thematicSubjects.push(section); // Builds the ribbon dynamically
+                            thematicSubjects.push(section); 
                         }
                         presentationData[section].push(nodeId);
                     }
@@ -439,25 +438,21 @@
         function dragend(e, d) { if (!e.active) simulation.alphaTarget(0); d.fx = null; d.fy = null; }
 
         function toggleSubjectFilter(subject, index) {
+            const wasActive = (currentSubjectFilter === subject);
             endPresentationMode(); 
             
-            if (currentSubjectFilter === subject) {
+            if (wasActive) {
                 resetGraph();
             } else {
                 currentSubjectFilter = subject;
                 d3.selectAll('.legend-item').classed('active', false);
                 d3.selectAll('.legend-item').filter(function() { return parseInt(this.dataset.index) === index; }).classed('active', true);
                 
-                d3.selectAll('.graph-element').classed('dimmed', true).classed('highlighted', false);
+                d3.selectAll('.graph-element').classed('dimmed', true).classed('highlighted', false).classed('force-visible', false);
+                d3.selectAll('.link-line').classed('dimmed', true).classed('highlighted-link', false).classed('force-visible', false);
+                d3.selectAll('.link-label').classed('show-labels', false).classed('force-visible', false);
+                d3.selectAll('.node-label').classed('large-label', false).classed('medium-label', false).classed('hub-label', false); 
                 
-                d3.selectAll('.node-label')
-                    .classed('large-label', false)
-                    .classed('medium-label', false)
-                    .classed('hub-label', false); 
-                    
-                d3.selectAll('.force-visible').classed('force-visible', false);
-                
-                // Directly pull the ordered playlist from the spreadsheet data
                 const orderedNodeIds = presentationData[subject] || [];
                 presentationQueue = [];
                 
@@ -469,9 +464,9 @@
                 const activeIds = presentationQueue.map(n => n.id);
 
                 globalNodeGroups.filter(n => activeIds.includes(n.id)).classed('dimmed', false).classed('highlighted', true);
-                
-                // Only show connecting lines if BOTH sides are explicitly in the presentation
-                globalLinkPaths.filter(l => activeIds.includes(l.source.id) && activeIds.includes(l.target.id)).classed('dimmed', false);
+                globalLinkPaths.filter(l => activeIds.includes(l.source.id) && activeIds.includes(l.target.id))
+                    .classed('dimmed', false)
+                    .classed('highlighted-link', true);
                 
                 document.getElementById('panel-domain-container').innerHTML = `<div class="domain-tag" style="background:var(--accent); color:#000; border-color:var(--accent)">Thematic Focus</div>`;
                 document.getElementById('panel-title').innerText = subject;
@@ -498,13 +493,13 @@
                     const minY = d3.min(presentationQueue, d => d.y);
                     const maxY = d3.max(presentationQueue, d => d.y);
 
-                    const dx = Math.max(maxX - minX, 150); 
-                    const dy = Math.max(maxY - minY, 150);
+                    const dx = Math.max(maxX - minX, 350); 
+                    const dy = Math.max(maxY - minY, 350);
                     
                     const viewWidth = width > 800 ? width - 600 : width;
                     const viewHeight = height;
                     
-                    const scale = Math.max(0.2, Math.min(1.2, 0.75 * Math.min(viewWidth / dx, viewHeight / dy)));
+                    const scale = Math.max(0.2, Math.min(1.2, 0.70 * Math.min(viewWidth / dx, viewHeight / dy)));
                     
                     const cx = (minX + maxX) / 2;
                     const cy = (minY + maxY) / 2;
@@ -519,7 +514,7 @@
         }
 
         document.addEventListener('keydown', (e) => {
-            if (presentationQueue.length > 0) {
+            if (presentationQueue.length > 0 || currentSubjectFilter) {
                 if (e.key === 'ArrowRight' || e.key === 'PageDown') {
                     e.preventDefault();
                     presNext();
@@ -534,6 +529,12 @@
             if (presentationIndex < presentationQueue.length - 1) {
                 presentationIndex++;
                 handleNodeClick(presentationQueue[presentationIndex]);
+            } else if (currentSubjectFilter) {
+                let currentThemeIdx = thematicSubjects.indexOf(currentSubjectFilter);
+                if (currentThemeIdx !== -1) {
+                    let nextIdx = (currentThemeIdx + 1) % thematicSubjects.length;
+                    toggleSubjectFilter(thematicSubjects[nextIdx], nextIdx);
+                }
             }
         }
 
@@ -543,16 +544,26 @@
                 handleNodeClick(presentationQueue[presentationIndex]);
             } else if (presentationIndex === 0) {
                 toggleSubjectFilter(currentSubjectFilter, thematicSubjects.indexOf(currentSubjectFilter));
+            } else if (presentationIndex === -1 && currentSubjectFilter) {
+                let currentThemeIdx = thematicSubjects.indexOf(currentSubjectFilter);
+                if (currentThemeIdx !== -1) {
+                    let prevIdx = (currentThemeIdx - 1 + thematicSubjects.length) % thematicSubjects.length;
+                    toggleSubjectFilter(thematicSubjects[prevIdx], prevIdx);
+                    if (presentationQueue.length > 0) {
+                        presentationIndex = presentationQueue.length - 1;
+                        handleNodeClick(presentationQueue[presentationIndex]);
+                    }
+                }
             }
         }
 
         function updatePresentationControls() {
             const controls = document.getElementById('presentation-controls');
-            if (presentationQueue.length > 0) {
+            if (presentationQueue.length > 0 || currentSubjectFilter) {
                 controls.classList.add('active');
                 
-                document.getElementById('btn-prev').disabled = presentationIndex === -1;
-                document.getElementById('btn-next').disabled = presentationIndex === presentationQueue.length - 1;
+                document.getElementById('btn-prev').disabled = false;
+                document.getElementById('btn-next').disabled = false;
                 
                 if (presentationIndex === -1) {
                     document.getElementById('pres-counter').innerText = `Overview`;
@@ -691,10 +702,10 @@
         function resetGraph() {
             endPresentationMode();
             document.getElementById('detail-panel').classList.remove('active');
-            d3.selectAll('.graph-element').classed('dimmed', false).classed('highlighted', false).classed('highlighted-link', false);
-            
+            d3.selectAll('.graph-element').classed('dimmed', false).classed('highlighted', false).classed('force-visible', false);
+            d3.selectAll('.link-line').classed('dimmed', false).classed('highlighted-link', false).classed('force-visible', false);
+            d3.selectAll('.link-label').classed('show-labels', false).classed('force-visible', false);
             d3.selectAll('.node-label').classed('large-label', false).classed('medium-label', false);
-            d3.selectAll('.force-visible').classed('force-visible', false);
             
             const visibleNodes = globalNodes;
             if (visibleNodes.length > 0) {
@@ -712,8 +723,6 @@
                 
                 svg.transition().duration(1000).call(zoom.transform, d3.zoomIdentity.translate(width / 2, height / 2).scale(scale).translate(-cx, -cy));
             }
-            
-            d3.selectAll('.link-label').classed('show-labels', false);
         }
     </script>
 </body>
