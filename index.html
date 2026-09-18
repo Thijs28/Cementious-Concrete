@@ -22,19 +22,16 @@
         .node-circle { transition: stroke 0.3s, r 0.3s; cursor: pointer; }
         .node-circle:hover { stroke: var(--accent) !important; stroke-width: 3px !important; }
         
-        /* Node Label Sizing Logic */
         .node-label { font-family: 'EB Garamond', serif; font-size: 14px; fill: var(--text-primary); pointer-events: none; text-shadow: 0 4px 12px rgba(0,0,0,1); transition: opacity 0.3s, font-size 0.4s, fill 0.4s, text-shadow 0.4s; user-select: none; }
         
-        /* Standard sizing classes */
         .node-label.hub-label { font-size: 22px !important; font-weight: 600; fill: #ffffff; text-shadow: 0 4px 15px rgba(0,0,0,1) !important; }
         .node-label.large-label { font-size: 32px !important; font-weight: 600; fill: #ffffff; text-shadow: 0 4px 20px rgba(0,0,0,1), 0 0 15px rgba(212, 175, 55, 0.6) !important; }
         .node-label.medium-label { font-size: 20px !important; font-weight: 400; fill: #f0f4f8; text-shadow: 0 4px 15px rgba(0,0,0,1) !important; }
 
-        /* Custom Override for Central Node Text */
         .node-label.central-node-text { 
             font-size: 38px !important; 
             font-weight: 700; 
-            fill: #FFC300 !important; /* Yellow to match the Core domain color */
+            fill: #FFC300 !important; 
             text-shadow: 0 5px 25px rgba(0,0,0,1), 0 0 20px rgba(255, 195, 0, 0.4) !important; 
         }
 
@@ -157,16 +154,8 @@
             "Sensory": "#FF00FF"        
         };
         
-        const thematicSubjects = [
-            "Origins of Cement",
-            "Industrialisation and Global Expansion",
-            "Production of Cement and Concrete",
-            "Sensory Experience of Concrete",
-            "Labor, Power and Geopolitics",
-            "Environmental Impacts",
-            "End-of-Life and Circularity",
-            "Future of Cement and Concrete"
-        ];
+        let thematicSubjects = [];
+        let presentationData = {};
         
         let currentSubjectFilter = null;
         let presentationQueue = [];
@@ -222,9 +211,10 @@
         let globalLinkTexts = null;
 
         Promise.all([
-            d3.text("nodes.csv"),
-            d3.text("links.csv")
-        ]).then(function([rawNodesText, rawLinksText]) {
+            d3.text("nodes.csv").catch(e => { console.error("Missing nodes.csv"); return ""; }),
+            d3.text("links.csv").catch(e => { console.error("Missing links.csv"); return ""; }),
+            d3.text("presentation.csv").catch(e => { console.error("Missing presentation.csv"); return ""; })
+        ]).then(function([rawNodesText, rawLinksText, rawPresText]) {
             
             const parseCSV = (text) => {
                 const firstLine = text.split('\n')[0];
@@ -233,6 +223,27 @@
                 else if (firstLine.includes(';') && (!firstLine.includes(',') || firstLine.indexOf(';') < firstLine.indexOf(','))) delimiter = ';';
                 return d3.dsvFormat(delimiter).parse(text);
             };
+
+            // Dynamically load the spreadsheet presentation playlists
+            if (rawPresText && rawPresText.trim() !== "") {
+                const rawPres = parseCSV(rawPresText);
+                rawPres.forEach(row => {
+                    const cleanKey = (k) => k.replace(/^\uFEFF/, '').trim().toLowerCase();
+                    const d = {};
+                    for (let k in row) d[cleanKey(k)] = (row[k] || "").trim();
+                    
+                    const section = d.section || "";
+                    const nodeId = (d.node_id || d.id || "").replace(/\s/g, '');
+                    
+                    if (section && nodeId) {
+                        if (!presentationData[section]) {
+                            presentationData[section] = [];
+                            thematicSubjects.push(section); // Builds the ribbon dynamically
+                        }
+                        presentationData[section].push(nodeId);
+                    }
+                });
+            }
 
             const rawNodes = parseCSV(rawNodesText);
             const rawLinks = parseCSV(rawLinksText);
@@ -251,17 +262,10 @@
                     d.domains.split("|").forEach(dom => extractedDomains.push(strictNormalize(dom)));
                 }
 
-                const extractedSubjects = [];
-                const rawSubject = d.section || d.subject || "";
-                if (rawSubject !== "") {
-                    rawSubject.split("|").forEach(s => extractedSubjects.push(strictNormalize(s)));
-                }
-
                 return {
                     id: (d.id || "").replace(/\s/g, ''),
                     title: d.title || d.id || "Unnamed Node",
                     domains: extractedDomains.length > 0 ? extractedDomains : ["Core"],
-                    subjects: extractedSubjects,
                     meta: d.meta || "",
                     desc: d.desc || d.description || "",
                     img: d.img || d.image || ""
@@ -316,7 +320,6 @@
             });
 
             globalNodes.forEach(n => {
-                // MASSIVE OVERRIDE FOR CENTRAL NODE
                 if (n.id === 'Central_Node') {
                     n.size = 50; 
                     n.isHub = false;
@@ -454,18 +457,21 @@
                     
                 d3.selectAll('.force-visible').classed('force-visible', false);
                 
-                const cleanInputSubject = subject.toLowerCase().replace(/[^a-z0-9]/g, '');
-                const isMatch = (arr) => {
-                    return arr.some(s => {
-                        const cleanS = s.toLowerCase().replace(/[^a-z0-9]/g, '');
-                        return cleanS.includes(cleanInputSubject) || cleanInputSubject.includes(cleanS);
-                    });
-                };
+                // Directly pull the ordered playlist from the spreadsheet data
+                const orderedNodeIds = presentationData[subject] || [];
+                presentationQueue = [];
                 
-                globalNodeGroups.filter(n => isMatch(n.subjects)).classed('dimmed', false).classed('highlighted', true);
-                globalLinkPaths.filter(l => isMatch(l.source.subjects) && isMatch(l.target.subjects)).classed('dimmed', false);
+                orderedNodeIds.forEach(id => {
+                    const foundNode = globalNodes.find(n => n.id === id);
+                    if (foundNode) presentationQueue.push(foundNode);
+                });
+
+                const activeIds = presentationQueue.map(n => n.id);
+
+                globalNodeGroups.filter(n => activeIds.includes(n.id)).classed('dimmed', false).classed('highlighted', true);
                 
-                presentationQueue = globalNodes.filter(n => isMatch(n.subjects));
+                // Only show connecting lines if BOTH sides are explicitly in the presentation
+                globalLinkPaths.filter(l => activeIds.includes(l.source.id) && activeIds.includes(l.target.id)).classed('dimmed', false);
                 
                 document.getElementById('panel-domain-container').innerHTML = `<div class="domain-tag" style="background:var(--accent); color:#000; border-color:var(--accent)">Thematic Focus</div>`;
                 document.getElementById('panel-title').innerText = subject;
