@@ -1,188 +1,179 @@
-source,target,label,label_reverse,strength,category
-Alite,Hydration,undergoes,hydrates,2,Transformation
-Belite,Hydration,undergoes,hydrates,2,Transformation
-Hydration,CSH_Gel,produces,is produced by,2,Transformation
-Hydration,Calcium_Hydroxide,produces,is produced by,2,Transformation
-Water_Cement_Ratio,Capillary_Porosity,dictates,is dictated by,2,Systemic Structure
-Water_Cement_Ratio,Hydration,enables,is enabled by,2,Systemic Structure
-Capillary_Porosity,Carbonation,facilitates,is facilitated by,2,Ecological
-Capillary_Porosity,Chloride_Ingress,facilitates,is facilitated by,2,Ecological
-Carbonation,Passive_Oxide_Layer,destroys,is destroyed by,2,Ecological
-Chloride_Ingress,Passive_Oxide_Layer,punctures,is punctured by,2,Ecological
-ITZ,Capillary_Porosity,increases locally,is locally increased by,2,Systemic Structure
-Drying_Shrinkage,Capillary_Porosity,caused by,causes,2,Systemic Structure
-Creep,CSH_Gel,deforms,is deformed by,2,Systemic Structure
-SCMs,Calcium_Hydroxide,consumes,is consumed by,2,Transformation
-SCMs,CSH_Gel,produces secondary,is secondary produced by,2,Transformation
-RCA,ITZ,creates double,is double created by,2,Systemic Structure
-RCA,Carbonation,sequesters via,is sequestered by,2,Ecological
-Superplasticizers,Water_Cement_Ratio,reduces,is reduced by,2,Technical
-ASR,Concrete,damages,is damaged by,2,Systemic Structure
-LC3,Portland_Cement,replaces clinker in,,2,Technical
-DEF,CSH_Gel,fractures,is fractured by,2,Technical
-Geopolymers,Portland_Cement,acts as alternative to,,2,Technical
-Raw_materials,Water_Cement_Ratio,undergoes,is undergone by,2,Transformation
-Raw_materials,Hydration,undergoes,is undergone by,2,Transformation
-Processing,Step_1_Quarring,starts with,is the start of,2,Transformation
-Step_1_Quarring,Step_2_Crushing,is followed by,follows,2,Transformation
-Step_2_Crushing,Step_3_Grinding_&_mixing,is followed by,follows,2,Transformation
-Step_3_Grinding_&_mixing,Step_4_Preheating,is followed by,follows,2,Transformation
-Step_4_Preheating,Step_5_Calcination_&_clinker,is followed by,follows,2,Transformation
-Step_5_Calcination_&_clinker,Step_6_Cooling_the_clinker,is followed by,follows,2,Transformation
-Step_6_Cooling_the_clinker,Step_7_Final_grinding,is followed by,follows,2,Transformation
-Step_7_Final_grinding,Step_8_Making_concrete,is followed by,follows,2,Transformation
-Step_8_Making_concrete,Step_9_Forming,is followed by,follows,2,Transformation
-Construction_cement,Different_types,consists of,consis,2,Technical
-Formability,Step_9_Forming,is linked to,links to,2,Technical
-reducing_waste,RCA,can be caused by,causes,2,Ecological
-waste_streams,RCA,consists of,are,2,Ecological
-end_of_life,RCA,caused by,causes,2,Ecological
-Process,Portland_Cement,of,follows this,2,Transformation
-scale_problem,carbon_footprint,drives,is driven by,3,Systematic Structure
-scale_problem,raw_material_extraction,demands,is demanded by,2,Systematic Structure
-scale_problem,water_consumption,strains,is strained by,2,Systematic Structure
-carbon_footprint,end_of_life,spans,is spand by,1,Ecological
-raw_material_extraction,habitat_destruction,triggers,is triggerd by,2,Ecological
-raw_material_extraction,physical_pollution,causes,is caused by,2,Ecological
-habitat_destruction,ecosystems_biodiversity,disrupts,is disrupted by,2,Ecological
-water_consumption,climate_challenge,threatens,is threatened by,1,Ecological
-urban_environment,climate_challenge,amplifies,is amplified by,1,Ecological
-end_of_life,recovery,requires,is required by,2,Transformation
-recovery,reuse,enables,is enabled by,1,Transformation
-recovery,recycling,enables,is enabled by,1,Transformation
-recycling,waste_streams,reprocesses,are reprocessed by,2,Technical
-waste_streams,SCMs,supplies,is supplied by,2,Transformation
-clinker_reduction,SCMs,incorporates,is incorporated by,2,Technical
-SCMs,carbon_footprint,reduces,is reduced by,3,Technical
-modernising_kilns,carbon_footprint,lowers,is lowered by,2,Technical
-Geopolymers,clinker_reduction,replace,is replaced by,2,Transformation
-Carbonation,carbon_footprint,sequesters,is sequestered by,3,Scientific
-Geopolymers,carbon_footprint,reduce,is reduced by,2,Technical
-recovery,raw_material_extraction,reduces,is reduced by,2,Transformation
-end_of_life,waste_streams,produces,is produced by,3,Ecological
-carbon_footprint,climate_challenge,contributes to,,3,Systematic Structure
-end_of_life,Carbonation,enables,is enabled by,2,Technical
-recycling,raw_material_extraction,reduces,is reduced by,2,Technical
-Surface_Finish,Tactile_Qualities,determines,is determined by,2,Sensory
-Reflectivity,Architectural_Atmosphere,influences,is influenced by,2,Sensory
-Sound_Reflection,Spatial_Perception,shapes,is shaped by,2,Sensory
-Formwork,Surface_Finish,determines,is determined by,2,Technical
-Exposed_Aggregate,Surface_Finish,creates,is created by,2,Technical
-Thermal_Mass,Indoor_Environmental_Quality,supports,is supported by,2,Systematic Structure
-Environmental_Exposure,Biological_Growth,encourages,is encouraged by,2,Ecological
-Biological_Growth,Material_Health,affects,is affected by,2,Scientific
-Environmental_Exposure,Patina,produces,is produced by,2,Transformation
-Efflorescence,Discolouration,causes,is caused by,2,Transformation
-Wear_and_Abrasion,Concrete_Ageing,contributes to,contributed by,2,Transformation
-Material_Health,Indoor_Environmental_Quality,affects,is affected by,2,Scientific
-Colour_Variation,Material_Experience,influences,is influenced by,2,Sensory
-Opacity,Visual_Weight,increases,is increasesd by,2,Sensory
-Visual_Weight,Monumentality,reinforces,is reinforced by,2,Sensory
-Material_Transformation,Surface_Finish,changes,is changed by,2,Transformation
-Tactile_Qualities,Material_Experience,shapes,is shaped by,2,Sensory
-Surface_Finish,Reflectivity,influences,is influenced by,2,Sensory
-Surface_Finish,Colour_Variation,affects,is affected by,2,Sensory
-Surface_Finish,Material_Experience,shapes,is shaped by,2,Sensory
-Exposed_Aggregate,Tactile_Qualities,increases,is increased by,2,Sensory
-Formwork,Tactile_Qualities,creates,is created by,2,Technical
-Formwork,Visual_Weight,influences,is influenced by,2,Technical
-Reflectivity,Spatial_Perception,influences,is influenced by,2,Sensory
-Opacity,Spatial_Perception,influences,is influenced by,2,Sensory
-Colour_Variation,Architectural_Atmosphere,shapes,is shaped by,2,Sensory
-Sound_Reflection,Material_Experience,affects,is affected by,2,Sensory
-Sound_Reflection,Architectural_Atmosphere,shapes,is shaped by,2,Sensory
-Thermal_Mass,Material_Experience,influences,is influenced by,2,Sensory
-Spatial_Perception,Architectural_Atmosphere,shapes,is shaped by,2,Sensory
-Visual_Weight,Spatial_Perception,influences,is influenced by,2,Sensory
-Monumentality,Architectural_Atmosphere,shapes,is shaped by,2,Sensory
-Environmental_Exposure,Concrete_Ageing,accelerates,is accelerated by,2,Transformation
-Environmental_Exposure,Discolouration,causes,is caused by,2,Transformation
-Environmental_Exposure,Efflorescence,causes,is caused by,2,Transformation
-Environmental_Exposure,Wear_and_Abrasion,causes,is caused by,2,Transformation
-Concrete_Ageing,Patina,produces,is produced by,2,Transformation
-Concrete_Ageing,Surface_Finish,changes,is changed by,2,Transformation
-Concrete_Ageing,Material_Health,affects,is affected by,2,Scientific
-Biological_Growth,Colour_Variation,changes,is changed by,2,Transformation
-Biological_Growth,Tactile_Qualities,changes,is changed by,2,Transformation
-Biological_Growth,Patina,contributes to,contributed by,2,Transformation
-Efflorescence,Surface_Finish,changes,is changed by,2,Transformation
-Efflorescence,Colour_Variation,creates,is created by,2,Transformation
-Discolouration,Architectural_Atmosphere,influences,is influenced by,2,Transformation
-Wear_and_Abrasion,Tactile_Qualities,changes,is changed by,2,Transformation
-Wear_and_Abrasion,Patina,contributes to,contributed by,2,Transformation
-Patina,Material_Experience,shapes,is shaped by,2,Sensory
-opus_caementicium_/_Roman_concrete,Early_Lime-Based_Binders,exemplifies,is exemplied by,3,Example
-Greek_Pozzolanic_mortar,Early_Lime-Based_Binders,exemplifies,is exemplied by,1,Example
-Non-hydraulic_lime_mortar,Early_Lime-Based_Binders,exemplifies,is exemplied by,1,Example
-Greek_Pozzolanic_mortar,opus_caementicium_/_Roman_concrete,contributes to,is to contributes by,2,Material development
-Decline_of_cementious_knowledge,opus_caementicium_/_Roman_concrete,interrupts,is interrupted by,3,Knowledge development
-increased_demand_for_lime_mortar,Non-hydraulic_lime_mortar,increases use of,response to,2,Material application
-Pozzolanic_trass,Non-hydraulic_lime_mortar,improves,is improved by,1,Material properties
-Sir_Henry_Shere,Pozzolanic_trass,experiments with,Experimented by oa,1,Material research
-John_Smeaton,From_Hydraulic_Lime_to_Portland_Cement,Researches,researched by,3,Scientific development
-Louis_Joseph_Vicat,From_Hydraulic_Lime_to_Portland_Cement,systematises,is systemized by,3,Scientific development
-Roman_Cement''_/_Natural_cement,From_Hydraulic_Lime_to_Portland_Cement,exemplifies,is exemplied by,3,Transitional material
-Proto-portland_ara,From_Hydraulic_Lime_to_Portland_Cement,exemplifies,is exemplied by,2,Transitional material
-Meso-Portland_Cement,PC,develops,is developed by,3,Material development
-Isaac_Charles_Johnson,Meso-Portland_Cement,improves,is improved by,1,Material development
-Isaac_Charles_Johnson,PC,develops,is developed by,1,Material development
-International_expansion,PC,disseminates,is disseminates by,3,Industrial development
-Industrialisation,PC,industrialises,is industriad by,1,Industrial development
-Portland_blastfurnace_slag_cement,Specialisation_of_portland_cements,exemplifies,is exemplified by,1,Cement specialisation
-â€˜ciment_fonduâ€™,Specialisation_of_portland_cements,exemplifies,is exemplified by,1,Cement specialisation
-Fly-ash,Specialisation_of_portland_cements,exemplifies,is exemplified by,1,Supplementary cementitious material
-water-cement_ratio_(w/c)_ratio,PC,determines,is determined by,2,Material performance
-Henri_Le_Chatelier,PC,analyses,is analysed by,1,Cement chemistry
-Portland_cement_standarisation,PC,standardises,is standardised by,2,Standardisation
-European_Cement_Standard,Cement_standarisation,formalises,is formalised by,3,Standardisation
-Ball-_and_tube_mills,Industrialisation,enables,is enabled by,3,Industrial technology
-Pulverised_coal,Industrialisation,enables,is enabled by,3,Industrial technology
-Rotary_kiln,Industrialisation,advances,is advanced by,3,Industrial technology
-Ball-_and_tube_mills,PC,improves,is improved by,2,Manufacturing technology
-Pulverised_coal,PC,enables,is enabled by,2,Manufacturing technology
-Rotary_kiln,PC,improves,is improved by,2,Manufacturing technology
-vertical_roller_mills_,Industrialisation,advances,is advanced by,3,Industrial technology
-dry-process_kilns_,Industrialisation,advances,is advanced by,3,Industrial technology
-vertical_roller_mills_,Ball-_and_tube_mills,develops from,Predecessor of,1,Industrial technology
-dry-process_kilns_,Rotary_kiln,develops from,Predecessor of,1,Industrial technology
-Specialisation_of_portland_cements,PC,diversifies,is diversified by,1,Cement development
-Alternative_(non-portland)cements,PC,substitutes for,Substitutes for,3,Material development
-Alternative_(non-portland)cements,Specialisation_of_portland_cements,extends,is extended by,1,Cement development
-Portland_Cement,Imperial_Power,enables,is enabled by,2,Geopolitical
-Imperial_Power,Mass_Production,is created by,creates,2,Geopolitical
-Mass_Production,Industrialisation,is caused by,causes,2,Cement development
-WW2,Cement_Corporations,increases the dependency,are increased after,2,Geopolitical
-Cement_Corporations,Geography,vary by,is varied by,2,Geopolitical
-Geography,Portland_Cement,extracts,is extracted by,2,Technical
-Carbon,climate_challenge,increases,are increased by,2,Ecological
-Labour,climate_challenge,is affected by,affects,2,Ecological
-Gas_Crisis,Mass_Production,challenges,is challenged by,2,Geopolitical
-Central_Node,PC,is founded on,is foundational to,3,Core Structure
-Central_Node,Finishing,is expressed through,expresses,3,Core Structure
-Central_Node,carbon_footprint,generates,is generated by,3,Core Structure
-Central_Node,Industrialisation_and_the_Development_of_Portland_Cement,was scaled by,scaled,3,Core Structure
-Central_Node,Hydration,hardens via,hardens,3,Core Structure
-Step_8_Making_concrete,Construction_cement,produces,is produced by,3,Transformation
-Construction_cement,Applications,is used in,uses,2,Technical
-Applications,Formability,depends on,supports,2,Technical
-Formability,Form,enables,is enabled by,2,Technical
-Capillary_Porosity,Efflorescence,allows,is allowed by,2,Transformation
-urban_environment,Architectural_Environment,shapes,is shaped by,2,Sensory
-Raw_materials,Color,determines,is determined by,2,Sensory
-Step_5_Calcination_&_clinker,Energy,consumes,is consumed by,3,Technical
-Gas_Crisis,Energy,disrupts supply of,supply is disrupted by,2,Geopolitical
-Decline_of_cementious_knowledge,From_Hydraulic_Lime_to_Portland_Cement,precedes,follows,1,Historical Context
-Proto-portland_ara,PC,leads to,develops from,2,Historical Context
-Oil_Cements,From_Hydraulic_Lime_to_Portland_Cement,influences search for,search influenced by,1,Historical Context
-Mass_Production,Cement_industry_production,drives,is driven by,3,Industrial development
-Cement_standarisation,"Standardisation,_Scale_and_Changing_Properties",initiates,is initiated by,2,Standardisation
-"Standardisation,_Scale_and_Changing_Properties",Specialisation_of_portland_cements,enables,is enabled by,2,Cement development
-Kiln_Reactions_Phase,Step_5_Calcination_&_clinker,details the chemistry of,is chemically detailed by,3,Transformation
-Calcination_Reaction,Kiln_Reactions_Phase,initiates,is initiated by,2,Transformation
-C2S_Reaction,Kiln_Reactions_Phase,occurs during,contains,2,Transformation
-C3S_Reaction,Kiln_Reactions_Phase,occurs during,contains,2,Transformation
-C3A_Reaction,Kiln_Reactions_Phase,occurs during,contains,2,Transformation
-C4AF_Reaction,Kiln_Reactions_Phase,occurs during,contains,2,Transformation
-Calcination_Reaction,carbon_footprint,generates 60% of,is generated via,3,Ecological
-C2S_Reaction,Belite,produces,is produced by,3,Scientific
-C3S_Reaction,Alite,produces,is produced by,3,Scientific
+source;target;label;label_reverse;strength;category;;
+Alite;Hydration;undergoes;hydrates;3;Transformation;;
+Belite;Hydration;undergoes;hydrates;3;Transformation;;
+Hydration;CSH_Gel;produces;is produced by;3;Transformation;;
+Hydration;Calcium_Hydroxide;produces;is produced by;2;Transformation;;
+Water_Cement_Ratio;Capillary_Porosity;dictates;is dictated by;3;Systemic Structure;;
+Water_Cement_Ratio;Hydration;enables;is enabled by;2;Systemic Structure;;
+Capillary_Porosity;Carbonation;facilitates;is facilitated by;2;Ecological;;
+Capillary_Porosity;Chloride_Ingress;facilitates;is facilitated by;2;Ecological;;
+Carbonation;Passive_Oxide_Layer;destroys;is destroyed by;2;Ecological;;
+Chloride_Ingress;Passive_Oxide_Layer;punctures;is punctured by;2;Ecological;;
+ITZ;Capillary_Porosity;increases locally;is locally increased by;2;Systemic Structure;;
+Drying_Shrinkage;Capillary_Porosity;caused by;causes;2;Systemic Structure;;
+Creep;CSH_Gel;deforms;is deformed by;2;Systemic Structure;;
+SCMs;Calcium_Hydroxide;consumes;is consumed by;2;Transformation;;
+SCMs;CSH_Gel;produces secondary;is secondary produced by;2;Transformation;;
+RCA;ITZ;creates double;is double created by;2;Systemic Structure;;
+RCA;Carbonation;sequesters via;is sequestered by;2;Ecological;;
+Superplasticizers;Water_Cement_Ratio;reduces;is reduced by;2;Technical;;
+ASR;Construction_Cement;damages;is damaged by;2;Systemic Structure;;
+LC3;Portland_Cement;replaces clinker in;could contain;2;Technical;;
+DEF;CSH_Gel;fractures;is fractured by;2;Technical;;
+Geopolymers;Portland_Cement;acts as alternative to;Could be replaced by;2;Technical;;
+Raw_materials;Water_Cement_Ratio;undergoes;is undergone by;1;Transformation;;
+Raw_materials;Hydration;undergoes ;is undergone by;1;Transformation;;
+Process;Step_1_Quarring;starts with;is the start of;2;Transformation;;
+Step_1_Quarring;Step_2_Crushing;is followed by;follows;2;Transformation;;
+Step_2_Crushing;Step_3_Grinding_&_mixing;is followed by;follows;2;Transformation;;
+Step_3_Grinding_&_mixing;Step_4_Preheating;is followed by;follows;2;Transformation;;
+Step_4_Preheating;Step_5_Calcination_&_clinker;is followed by;follows;2;Transformation;;
+Step_5_Calcination_&_clinker;Step_6_Cooling_the_clinker;is followed by;follows;2;Transformation;;
+Step_6_Cooling_the_clinker;Step_7_Final_grinding;is followed by;follows;2;Transformation;;
+Step_7_Final_grinding;Step_8_Making_concrete;is followed by;follows;2;Transformation;;
+Step_8_Making_concrete;Step_9_Forming;is followed by;follows;2;Transformation;;
+Construction_cement;Different_types;consists of;consis;1;Technical;;
+Formability;Step_9_Forming;is linked to ;links to;2;Technical;;
+reducing_waste;RCA;can be caused by;causes;1;Ecological;;
+waste_streams;RCA;consists of;are;1;Ecological;;
+end_of_life;RCA;caused by;causes;1;Ecological;;
+Process;Portland_Cement;of;follows this;3;Transformation;;
+scale_problem;carbon_footprint;drives;is driven by;3;Systematic Structure;;
+scale_problem;raw_material_extraction;demands;is demanded by;2;Systematic Structure;;
+scale_problem;water_consumption;strains;is strained by;2;Systematic Structure;;
+carbon_footprint;end_of_life;spans;is spanned by;1;Ecological;;
+raw_material_extraction;habitat_destruction;triggers;is triggerd by;2;Ecological;;
+raw_material_extraction;physical_pollution;causes;is caused by;2;Ecological;;
+habitat_destruction;ecosystems_biodiversity;disrupts;is disrupted by;2;Ecological;;
+water_consumption;climate_challenge;threatens;is threatened by;1;Ecological;;
+urban_environment;climate_challenge;amplifies;is amplified by;1;Ecological;;
+end_of_life;recovery;requires;is required by;2;Transformation;;
+recovery;reuse;enables;is enabled by;1;Transformation;;
+recovery;recycling;enables;is enabled by;1;Transformation;;
+recycling;waste_streams;reprocesses;are reprocessed by;2;Technical;;
+waste_streams;SCMs;supplies;is supplied by;2;Transformation;;
+clinker_reduction;SCMs;incorporates;is incorporated by;2;Technical;;
+SCMs;carbon_footprint;reduces;is reduced by;3;Technical;;
+modernising_kilns;carbon_footprint;lowers;is lowered by;2;Technical;;
+Geopolymers;clinker_reduction;replace;is replaced by;2;Transformation;;
+Carbonation;carbon_footprint;sequesters;is sequestered by;3;Scientific;;
+Geopolymers;carbon_footprint;reduce;is reduced by;2;Technical;;
+recovery;raw_material_extraction;reduces;is reduced by;2;Transformation;;
+end_of_life;waste_streams;produces;is produced by;3;Ecological;;
+carbon_footprint;climate_challenge;contributes to;;3;Systematic Structure;;
+end_of_life;Carbonation;enables;is enabled by;2;Technical;;
+recycling;raw_material_extraction;reduces;is reduced by;2;Technical;;
+Finishing;Tactile_Qualities;determines;is determined by;2;Sensory;;
+Reflectivity;Architectural_Environment;influences;is influenced by;2;Sensory;;
+Sound;Spatial_Perception;shapes;is shaped by;2;Sensory;;
+Form;Surface_Finish;determines;is determined by;2;Technical;;
+Exposed_Aggregate;Surface_Finish;creates;is created by;2;Technical;;
+Thermal_Mass;Indoor;supports;is supported by;2;Systematic Structure;;
+Environmental_Exposure;Biological_Growth;encourages;is encouraged by;2;Ecological;;
+Biological_Growth;Material_Health;affects;is affected by;2;Scientific;;
+Environmental_Exposure;Patina;produces;is produced by;2;Transformation;;
+Efflorescence;Discolouration;causes;is caused by;2;Transformation;;
+Abrasion;Concrete_Ageing;contributes to;contributed by;2;Transformation;;
+Material_Health;Indoor;affects;is affected by;2;Scientific;;
+Color;Experience;influences;is influenced by;2;Sensory;;
+Opacity;Visual_Weight;increases;is increasesd by;2;Sensory;;
+Visual_Weight;Monumentality;reinforces;is reinforced by;2;Sensory;;
+Transformation;Surface_Finish;changes;is changed by;2;Transformation;;
+Tactile_Qualities;Experience;shapes;is shaped by;2;Sensory;;
+Surface_Finish;Reflectivity ;influences;is influenced by;2;Sensory;;
+Surface_Finish;Colour_Variation;affects;is affected by;2;Sensory;;
+Surface_Finish;Experience;shapes;is shaped by;2;Sensory;;
+Exposed_Aggregate;Tactile_Qualities;increases ;is increased by;2;Sensory;;
+Formwork;Tactile_Qualities;creates;is created by;2;Technical;;
+Formwork;Visual_Weight;influences;is influenced by;2;Technical;;
+Reflectivity;Spatial_Perception;influences;is influenced by;2;Sensory;;
+Opacity;Spatial_Perception;influences;is influenced by;2;Sensory;;
+Colour_Variation;Architectural_Environment;shapes;is shaped by;2;Sensory;;
+Sound_Reflection;Experience;affects;is affected by;2;Sensory;;
+Sound_Reflection;Architectural_Environment;shapes;is shaped by;2;Sensory;;
+Thermal_Mass;Experience;influences;is influenced by;2;Sensory;;
+Spatial_Perception;Architectural_Environment;shapes;is shaped by;2;Sensory;;
+Visual_Weight;Spatial_Perception;influences;is influenced by;2;Sensory;;
+Monumental_Effect;Architectural_Environment;shapes;is shaped by;2;Sensory;;
+Environmental_Exposure;Concrete_Ageing;accelerates;is accelerated by;2;Transformation;;
+Environmental_Exposure;Discolouration;causes;is caused by;2;Transformation;;
+Environmental_Exposure;Efflorescence;causes;is caused by;2;Transformation;;
+Environmental_Exposure;Wear_and_Abrasion;causes;is caused by;2;Transformation;;
+Ageing;Patina;produces;is produced by;2;Transformation;;
+Ageing;Surface_Finish;changes;is changed by;2;Transformation;;
+Ageing;Material_Health;affects;is affected by;2;Scientific;;
+Biological_Growth;Colour_Variation;changes;is changed by;2;Transformation;;
+Biological_Growth;Tactile_Qualities;changes;is changed by;2;Transformation;;
+Biological_Growth;Patina;contributes to;contributed by;2;Transformation;;
+Efflorescence;Surface_Finish;changes;is changed by;2;Transformation;;
+Efflorescence;Colour_Variation;creates;is created by;2;Transformation;;
+Discolouration;Architectural_Environment;influences;is influenced by;2;Transformation;;
+Wear_and_Abrasion;Tactile_Qualities;changes;is changed by;2;Transformation;;
+Wear_and_Abrasion;Patina;contributes to;contributed by;2;Transformation;;
+Patina;Experience;shapes;is shaped by;2;Sensory;;
+opus_caementicium_/_Roman_concrete;Early_Lime-Based_Binders;exemplifies;is exemplied by;3;Example;;
+Greek_Pozzolanic_mortar;Early_Lime-Based_Binders;exemplifies;is exemplied by;1;Example;;
+Non-hydraulic_lime_mortar;Early_Lime-Based_Binders;exemplifies;is exemplied by;1;Example;;
+Greek_Pozzolanic_mortar;opus_caementicium_/_Roman_concrete;contributes to;is to contributes by;2;Material development;;
+Decline_of_cementious_knowledge;opus_caementicium_/_Roman_concrete;interrupts;is interrupted by;3;Knowledge development;;
+increased_demand_for_lime_mortar;Non-hydraulic_lime_mortar;increases use of;response to;2;Material application;;
+Pozzolanic_trass;Non-hydraulic_lime_mortar;improves;is improved by;1;Material properties;;
+Sir_Henry_Shere;Pozzolanic_trass;experiments with;Experimented by oa;1;Material research;;
+John_Smeaton;From_Hydraulic_Lime_to_Portland_Cement;Researches;researched by;3;Scientific development;;
+Louis_Joseph_Vicat;From_Hydraulic_Lime_to_Portland_Cement;systematises;is systemized by;3;Scientific development;;
+Roman_Cement''_/_Natural_cement;From_Hydraulic_Lime_to_Portland_Cement;exemplifies;is exemplied by;3;Transitional material;;
+Proto-portland_ara;From_Hydraulic_Lime_to_Portland_Cement;exemplifies;is exemplied by;2;Transitional material;;
+Meso-Portland_Cement;PC;develops;is developed by;3;Material development;;
+Isaac_Charles_Johnson;Meso-Portland_Cement;improves;is improved by;1;Material development;;
+Isaac_Charles_Johnson;PC;develops;is developed by;1;Material development;;
+International_expansion;PC;disseminates;is disseminates by;3;Industrial development;;
+Industrialisation;PC;industrialises;is industriad by;1;Industrial development;;
+Portland_blastfurnace_slag_cement;Specialisation_of_portland_cements;exemplifies;is exemplified by;1;Cement specialisation;;
+‘ciment_fondu’;Specialisation_of_portland_cements;exemplifies;is exemplified by;1;Cement specialisation;;
+Fly-ash;Specialisation_of_portland_cements;exemplifies;is exemplified by;1;Supplementary cementitious material;;
+Water-Cement_Ratio;PC;determines;is determined by;2;Material performance;;
+Henri_Le_Chatelier;PC;analyses;is analysed by;1;Cement chemistry;;
+Cement_standarisation;PC;standardises;is standardised by;2;Standardisation;;
+European_Cement_Standard;Cement_standarisation;formalises;is formalised by;3;Standardisation;;
+Ball-_and_tube_mills;Industrialisation;enables;is enabled by;3;Industrial technology;;
+Pulverised_coal;Industrialisation;enables;is enabled by;3;Industrial technology;;
+Rotary_kiln;Industrialisation;advances;is advanced by;3;Industrial technology;;
+Ball-_and_tube_mills;PC;improves;is improved by;2;Manufacturing technology;;
+Pulverised_coal;PC;enables;is enabled by;2;Manufacturing technology;;
+Rotary_kiln;PC;improves;is improved by;2;Manufacturing technology;;
+vertical_roller_mills_;Industrialisation;advances;is advanced by;3;Industrial technology;;
+dry-process_kilns_;Industrialisation;advances;is advanced by;3;Industrial technology;;
+vertical_roller_mills_;Ball-_and_tube_mills;develops from;Predecessor of;1;Industrial technology;;
+dry-process_kilns_;Rotary_kiln;develops from;Predecessor of;1;Industrial technology;;
+Specialisation_of_portland_cements;PC;diversifies;is diversified by;1;Cement development;;
+Alternative_(non-portland)cements;PC;substitutes for;Substitutes for;3;Material development;;
+Alternative_(non-portland)cements;Specialisation_of_portland_cements;extends;is extended by;1;Cement development;;
+Portland_Cement;Imperial_Power ;enables;is enabled by;2;Geopolitical;;
+Imperial_Power ;Mass_Production;is created by;creates;2;Geopolitical;;
+Mass_Production;Industrialisation;is caused by;causes;2;Cement development;;
+WW2;Cement_Corporations;increases the dependency;are increased after;2;Geopolitical;;
+Cement_Corporations;Geography;vary by;is varied by;2;Geopolitical;;
+Geography;Portland_Cement;extracts;is extracted by;2;Technical;;
+Carbon;climate_challenge;increases;are increased by;2;Ecological;;
+Labour;climate_challenge;is affected by;affects;2;Ecological;;
+Gas_Crisis;Mass_Production;challenges;is challenged by;2;Geopolitical;;
+Central_Node;PC;is founded on;is foundational to;3;Core Structure;;
+Central_Node;Finishing;is expressed through;expresses;3;Core Structure;;
+Central_Node;carbon_footprint;generates;is generated by;3;Core Structure;;
+Central_Node;Industrialisation;was scaled by;scaled;3;Core Structure;;
+Central_Node;Hydration;hardens via;hardens;3;Core Structure;;
+Step_8_Making_concrete;Construction_cement;produces;is produced by;3;Transformation;;
+Construction_cement;Applications;is used in;uses;2;Technical;;
+Applications;Formability;depends on;supports;2;Technical;;
+Formability;Form;enables;is enabled by;2;Technical;;
+Capillary_Porosity;Efflorescence;allows;is allowed by;2;Transformation;;
+urban_environment;Architectural_Environment;shapes;is shaped by;2;Sensory;;
+Raw_materials;Color;determines;is determined by;2;Sensory;;
+Step_5_Calcination_&_clinker;Energy;consumes;is consumed by;3;Technical;;
+Gas_Crisis;Energy;disrupts supply of;supply is disrupted by;2;Geopolitical;;
+Decline_of_cementious_knowledge;From_Hydraulic_Lime_to_Portland_Cement;precedes;follows;1;Historical Context;;
+Proto-portland_ara;PC;leads to;develops from;2;Historical Context;;
+Oil_Cements;From_Hydraulic_Lime_to_Portland_Cement;influences search for;search influenced by;1;Historical Context;;
+Mass_Production;Cement_industry_production;drives;is driven by;3;Industrial development;;
+Cement_standarisation;Specialisation_of_portland_cements;enables;is enabled by;2;Cement development;;
+;;;;;;;
