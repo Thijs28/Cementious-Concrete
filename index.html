@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="referrer" content="no-referrer">
     <title>Semantic Knowledge Graph | Presentation Mode</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
@@ -39,7 +40,7 @@
         .link-label { font-family: 'Inter', sans-serif; font-size: 9px; fill: #9aa2af; text-transform: uppercase; letter-spacing: 1.5px; pointer-events: none; text-anchor: middle; font-weight: 600; text-shadow: 0 2px 4px rgba(0,0,0,0.9); opacity: 0; transition: opacity 0.3s; user-select: none; }
         
         .show-labels { opacity: 1 !important; }
-        .dimmed { opacity: 0.05 !important; transition: opacity 0.4s ease; filter: grayscale(100%); pointer-events: none; }
+        .dimmed { opacity: 0.05 !important; transition: opacity 0.4s ease filter: grayscale(100%); pointer-events: none; }
         .highlighted { opacity: 1 !important; transition: opacity 0.4s ease; }
         .highlighted-link { stroke: #cbd5e1 !important; stroke-opacity: 1 !important; }
         
@@ -445,13 +446,10 @@
                 resetGraph();
             } else {
                 currentSubjectFilter = subject;
+                let isConclusion = subject.toLowerCase() === "conclusion";
+
                 d3.selectAll('.legend-item').classed('active', false);
                 d3.selectAll('.legend-item').filter(function() { return parseInt(this.dataset.index) === index; }).classed('active', true);
-                
-                d3.selectAll('.graph-element').attr('class', 'node graph-element dimmed');
-                d3.selectAll('.link-line').attr('class', 'link-line dimmed');
-                d3.selectAll('.link-label').attr('class', 'link-label');
-                d3.selectAll('.node-label').attr('class', 'node-label');
                 
                 const orderedNodeIds = presentationData[subject] || [];
                 presentationQueue = [];
@@ -463,13 +461,24 @@
 
                 const activeIds = presentationQueue.map(n => n.id);
 
-                globalNodeGroups.filter(n => activeIds.includes(n.id)).classed('dimmed', false).classed('highlighted', true);
-                globalLinkPaths.filter(l => activeIds.includes(l.source.id) && activeIds.includes(l.target.id))
-                    .classed('dimmed', false)
-                    .classed('highlighted-link', true);
-                
-                globalNodeGroups.selectAll('.node-label')
-                    .classed('central-node-text', d => d.isCentral);
+                if (isConclusion) {
+                    d3.selectAll('.graph-element').attr('class', 'node graph-element');
+                    d3.selectAll('.link-line').attr('class', 'link-line');
+                    d3.selectAll('.node-label').attr('class', 'node-label').classed('hub-label', d => d.isHub).classed('central-node-text', d => d.isCentral);
+                } else {
+                    d3.selectAll('.graph-element').attr('class', 'node graph-element dimmed');
+                    d3.selectAll('.link-line').attr('class', 'link-line dimmed');
+                    d3.selectAll('.link-label').attr('class', 'link-label');
+                    d3.selectAll('.node-label').attr('class', 'node-label');
+                    
+                    globalNodeGroups.filter(n => activeIds.includes(n.id)).classed('dimmed', false).classed('highlighted', true);
+                    globalLinkPaths.filter(l => activeIds.includes(l.source.id) && activeIds.includes(l.target.id))
+                        .classed('dimmed', false)
+                        .classed('highlighted-link', true);
+                        
+                    globalNodeGroups.selectAll('.node-label')
+                        .classed('central-node-text', d => d.isCentral);
+                }
                 
                 document.getElementById('panel-domain-container').innerHTML = `<div class="domain-tag" style="background:var(--accent); color:#000; border-color:var(--accent)">Thematic Focus</div>`;
                 document.getElementById('panel-title').innerText = subject;
@@ -490,12 +499,14 @@
                 document.getElementById('panel-desc').innerHTML = tocHTML;
                 document.getElementById('detail-panel').classList.add('active');
 
-                if (presentationQueue.length > 0) {
-                    const pad = 250;
-                    const minX = d3.min(presentationQueue, d => d.x) - pad;
-                    const maxX = d3.max(presentationQueue, d => d.x) + pad;
-                    const minY = d3.min(presentationQueue, d => d.y) - pad;
-                    const maxY = d3.max(presentationQueue, d => d.y) + pad;
+                let zoomNodes = isConclusion ? globalNodes : presentationQueue;
+
+                if (zoomNodes.length > 0) {
+                    const pad = isConclusion ? 100 : 350; 
+                    const minX = d3.min(zoomNodes, d => d.x) - pad;
+                    const maxX = d3.max(zoomNodes, d => d.x) + pad;
+                    const minY = d3.min(zoomNodes, d => d.y) - pad;
+                    const maxY = d3.max(zoomNodes, d => d.y) + pad;
 
                     const dx = maxX - minX; 
                     const dy = maxY - minY;
