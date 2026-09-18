@@ -448,10 +448,10 @@
                 d3.selectAll('.legend-item').classed('active', false);
                 d3.selectAll('.legend-item').filter(function() { return parseInt(this.dataset.index) === index; }).classed('active', true);
                 
-                d3.selectAll('.graph-element').classed('dimmed', true).classed('highlighted', false).classed('force-visible', false);
-                d3.selectAll('.link-line').classed('dimmed', true).classed('highlighted-link', false).classed('force-visible', false);
-                d3.selectAll('.link-label').classed('show-labels', false).classed('force-visible', false);
-                d3.selectAll('.node-label').classed('large-label', false).classed('medium-label', false).classed('hub-label', false); 
+                d3.selectAll('.graph-element').attr('class', 'node graph-element dimmed');
+                d3.selectAll('.link-line').attr('class', 'link-line dimmed');
+                d3.selectAll('.link-label').attr('class', 'link-label');
+                d3.selectAll('.node-label').attr('class', 'node-label');
                 
                 const orderedNodeIds = presentationData[subject] || [];
                 presentationQueue = [];
@@ -467,6 +467,9 @@
                 globalLinkPaths.filter(l => activeIds.includes(l.source.id) && activeIds.includes(l.target.id))
                     .classed('dimmed', false)
                     .classed('highlighted-link', true);
+                
+                globalNodeGroups.selectAll('.node-label')
+                    .classed('central-node-text', d => d.isCentral);
                 
                 document.getElementById('panel-domain-container').innerHTML = `<div class="domain-tag" style="background:var(--accent); color:#000; border-color:var(--accent)">Thematic Focus</div>`;
                 document.getElementById('panel-title').innerText = subject;
@@ -488,18 +491,19 @@
                 document.getElementById('detail-panel').classList.add('active');
 
                 if (presentationQueue.length > 0) {
-                    const minX = d3.min(presentationQueue, d => d.x);
-                    const maxX = d3.max(presentationQueue, d => d.x);
-                    const minY = d3.min(presentationQueue, d => d.y);
-                    const maxY = d3.max(presentationQueue, d => d.y);
+                    const pad = 250;
+                    const minX = d3.min(presentationQueue, d => d.x) - pad;
+                    const maxX = d3.max(presentationQueue, d => d.x) + pad;
+                    const minY = d3.min(presentationQueue, d => d.y) - pad;
+                    const maxY = d3.max(presentationQueue, d => d.y) + pad;
 
-                    const dx = Math.max(maxX - minX, 350); 
-                    const dy = Math.max(maxY - minY, 350);
+                    const dx = maxX - minX; 
+                    const dy = maxY - minY;
                     
                     const viewWidth = width > 800 ? width - 600 : width;
-                    const viewHeight = height;
+                    const viewHeight = height - 120;
                     
-                    const scale = Math.max(0.2, Math.min(1.2, 0.70 * Math.min(viewWidth / dx, viewHeight / dy)));
+                    const scale = Math.max(0.1, Math.min(1.2, Math.min(viewWidth / dx, viewHeight / dy)));
                     
                     const cx = (minX + maxX) / 2;
                     const cy = (minY + maxY) / 2;
@@ -622,18 +626,19 @@
                 const connectedNodes = [d.id, ...connectedLinks.map(l => l.source.id === d.id ? l.target.id : l.source.id)];
 
                 const targetNodesData = globalNodes.filter(n => connectedNodes.includes(n.id));
-                const minX = d3.min(targetNodesData, n => n.x);
-                const maxX = d3.max(targetNodesData, n => n.x);
-                const minY = d3.min(targetNodesData, n => n.y);
-                const maxY = d3.max(targetNodesData, n => n.y);
+                const pad = 200;
+                const minX = d3.min(targetNodesData, n => n.x) - pad;
+                const maxX = d3.max(targetNodesData, n => n.x) + pad;
+                const minY = d3.min(targetNodesData, n => n.y) - pad;
+                const maxY = d3.max(targetNodesData, n => n.y) + pad;
 
-                const dx = Math.max(maxX - minX, 200); 
-                const dy = Math.max(maxY - minY, 200);
+                const dx = maxX - minX; 
+                const dy = maxY - minY;
                 
                 const viewWidth = width > 800 ? width - 600 : width;
-                const viewHeight = height;
+                const viewHeight = height - 120;
                 
-                const scale = Math.max(0.2, Math.min(1.2, 0.65 * Math.min(viewWidth / dx, viewHeight / dy)));
+                const scale = Math.max(0.1, Math.min(1.2, Math.min(viewWidth / dx, viewHeight / dy)));
                 const cx = (minX + maxX) / 2;
                 const cy = (minY + maxY) / 2;
                 const offsetX = width > 800 ? (width - 600) / 2 : width / 2;
@@ -702,22 +707,23 @@
         function resetGraph() {
             endPresentationMode();
             document.getElementById('detail-panel').classList.remove('active');
-            d3.selectAll('.graph-element').classed('dimmed', false).classed('highlighted', false).classed('force-visible', false);
-            d3.selectAll('.link-line').classed('dimmed', false).classed('highlighted-link', false).classed('force-visible', false);
-            d3.selectAll('.link-label').classed('show-labels', false).classed('force-visible', false);
-            d3.selectAll('.node-label').classed('large-label', false).classed('medium-label', false);
+            d3.selectAll('.graph-element').attr('class', 'node graph-element');
+            d3.selectAll('.link-line').attr('class', 'link-line');
+            d3.selectAll('.link-label').attr('class', 'link-label');
+            d3.selectAll('.node-label').attr('class', 'node-label').classed('hub-label', d => d.isHub).classed('central-node-text', d => d.isCentral);
             
             const visibleNodes = globalNodes;
             if (visibleNodes.length > 0) {
-                const minX = d3.min(visibleNodes, n => n.x);
-                const maxX = d3.max(visibleNodes, n => n.x);
-                const minY = d3.min(visibleNodes, n => n.y);
-                const maxY = d3.max(visibleNodes, n => n.y);
+                const pad = 200;
+                const minX = d3.min(visibleNodes, n => n.x) - pad;
+                const maxX = d3.max(visibleNodes, n => n.x) + pad;
+                const minY = d3.min(visibleNodes, n => n.y) - pad;
+                const maxY = d3.max(visibleNodes, n => n.y) + pad;
 
-                const dx = Math.max(maxX - minX, width / 2); 
-                const dy = Math.max(maxY - minY, height / 2);
+                const dx = maxX - minX; 
+                const dy = maxY - minY;
                 
-                const scale = Math.max(0.15, Math.min(1.0, 0.85 * Math.min(width / dx, height / dy)));
+                const scale = Math.max(0.05, Math.min(1.0, Math.min(width / dx, height / dy)));
                 const cx = (minX + maxX) / 2;
                 const cy = (minY + maxY) / 2;
                 
