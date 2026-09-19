@@ -677,7 +677,12 @@
                 
                 const mediaContainer = document.getElementById('panel-media');
                 if (d.img && d.img !== "") {
-                    document.getElementById('panel-img').src = d.img;
+                    let imagePath = d.img;
+                    // If they just typed the file name, automatically point to the images folder
+                    if (!imagePath.startsWith('http') && !imagePath.startsWith('images/')) {
+                        imagePath = 'images/' + imagePath;
+                    }
+                    document.getElementById('panel-img').src = imagePath;
                     mediaContainer.classList.add('active');
                 } else {
                     mediaContainer.classList.remove('active');
