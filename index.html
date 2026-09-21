@@ -198,14 +198,6 @@
                       .trim(); 
         };
 
-        const cleanCSVKeys = (obj) => {
-            const cleanObj = {};
-            for (let key in obj) {
-                cleanObj[strictNormalize(key)] = strictNormalize(obj[key]);
-            }
-            return cleanObj;
-        };
-
         let globalNodes = [];
         let globalLinks = [];
         let globalNodeGroups = null;
@@ -263,13 +255,16 @@
                     d.domains.split("|").forEach(dom => extractedDomains.push(strictNormalize(dom)));
                 }
 
+                // BULLETPROOF IMAGE LOGIC
+                const rawImage = d.img || d['img name'] || d.image || d.picture || d['img_name'] || "";
+
                 return {
                     id: (d.id || "").replace(/\s/g, ''),
                     title: d.title || d.id || "Unnamed Node",
                     domains: extractedDomains.length > 0 ? extractedDomains : ["Core"],
                     meta: d.meta || "",
                     desc: d.desc || d.description || "",
-                    img: d.img || d.image || ""
+                    img: rawImage
                 };
             }).filter(n => n.id !== "");
 
@@ -657,17 +652,12 @@
                 
                 svg.transition().duration(1000).call(zoom.transform, d3.zoomIdentity.translate(offsetX, height/2).scale(scale).translate(-cx, -cy));
 
-                // ----------------------------------------------------
-                // NEW VISIBILITY LOGIC FOR PRESENTATION OVERLAP
-                // ----------------------------------------------------
                 const activeThemeIds = presentationQueue.map(n => n.id);
                 const isConclusion = currentSubjectFilter && currentSubjectFilter.toLowerCase() === "conclusion";
 
-                // Reset base classes to clear out old states cleanly
                 globalNodeGroups.attr('class', 'node graph-element');
                 globalLinkPaths.attr('class', 'link-line');
                 
-                // Apply specific visibility classes to nodes
                 globalNodeGroups.each(function(n) {
                     const isConnected = connectedNodes.includes(n.id);
                     const isInTheme = activeThemeIds.includes(n.id);
@@ -676,20 +666,18 @@
                     if (isConnected) {
                         nodeClass += 'highlighted force-visible';
                     } else if (currentSubjectFilter && !isConclusion && isInTheme) {
-                        nodeClass += 'theme-dimmed'; // 25% opacity for other nodes in the same theme
+                        nodeClass += 'theme-dimmed';
                     } else {
-                        nodeClass += 'dimmed'; // 5% opacity for everything else
+                        nodeClass += 'dimmed';
                     }
                     d3.select(this).attr('class', nodeClass);
                 });
 
-                // Apply link visibilities
                 globalLinkPaths.classed('dimmed', true).classed('highlighted-link', false).classed('force-visible', false);
                 globalLinkPaths.filter(l => connectedLinks.includes(l)).classed('dimmed', false).classed('highlighted-link', true).classed('force-visible', true);
                 
                 globalLinkTexts.classed('force-visible', false).classed('show-labels', false);
                 globalLinkTexts.filter(l => connectedLinks.includes(l)).classed('show-labels', true).classed('force-visible', true);
-                // ----------------------------------------------------
 
                 globalNodeGroups.selectAll('.node-label')
                     .classed('hub-label', false)
@@ -703,9 +691,11 @@
                 
                 const mediaContainer = document.getElementById('panel-media');
                 if (d.img && d.img !== "") {
-                    let imagePath = d.img;
-                    if (!imagePath.startsWith('http') && !imagePath.startsWith('images/') && !imagePath.startsWith('data:')) {
+                    let imagePath = d.img.trim();
+                    if (!imagePath.startsWith('http') && !imagePath.toLowerCase().startsWith('images/') && !imagePath.startsWith('data:')) {
                         imagePath = 'Images/' + imagePath;
+                    } else if (imagePath.startsWith('images/')) {
+                        imagePath = 'Images/' + imagePath.substring(7);
                     }
                     document.getElementById('panel-img').src = imagePath;
                     mediaContainer.classList.add('active');
