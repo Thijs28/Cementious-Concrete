@@ -84,9 +84,12 @@
         .domain-tag { display: inline-block; padding: 6px 14px; border: 1px solid #333; border-radius: 20px; font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; color: #fff; margin-bottom: 20px; margin-right: 8px;}
         h1 { font-family: 'EB Garamond', serif; font-size: 2.6rem; font-weight: 400; margin: 0 0 15px 0; }
         .meta-data { font-size: 0.85rem; color: var(--text-muted); border-bottom: 1px solid #333945; padding-bottom: 20px; margin-bottom: 30px; text-transform: uppercase; letter-spacing: 1px;}
-        .media-container { width: 100%; height: 260px; background: #000; margin-bottom: 30px; border-radius: 6px; overflow: hidden; border: 1px solid #333945; display: none; }
+        
+        /* THE CSS FIX FOR INVISIBLE IMAGES */
+        .media-container { width: 100%; min-height: 280px; position: relative; background: #000; margin-bottom: 30px; border-radius: 6px; overflow: hidden; border: 1px solid #333945; display: none; }
         .media-container.active { display: block; }
-        .media-container img { width: 100%; height: 100%; object-fit: cover; opacity: 0.85; }
+        .media-container img { width: 100%; height: 100%; position: absolute; top: 0; left: 0; object-fit: contain; opacity: 0.95; }
+        
         .content-body { font-size: 1.05rem; line-height: 1.7; font-weight: 300; color: #c4c9d0; margin-bottom: 30px; }
         
         .interdependency-list { padding-top: 25px; border-top: 1px solid #333945; display: none; }
@@ -198,6 +201,14 @@
                       .trim(); 
         };
 
+        const cleanCSVKeys = (obj) => {
+            const cleanObj = {};
+            for (let key in obj) {
+                cleanObj[strictNormalize(key)] = strictNormalize(obj[key]);
+            }
+            return cleanObj;
+        };
+
         let globalNodes = [];
         let globalLinks = [];
         let globalNodeGroups = null;
@@ -255,23 +266,13 @@
                     d.domains.split("|").forEach(dom => extractedDomains.push(strictNormalize(dom)));
                 }
 
-                // BULLETPROOF IMAGE LOGIC
-                let rawImage = "";
-                for (let key in d) {
-                    let val = (d[key] || "").trim();
-                    if ((val.endsWith('.jpg') || val.endsWith('.png') || val.endsWith('.jpeg')) && !val.includes(' ')) {
-                        rawImage = val;
-                        break;
-                    }
-                }
-
                 return {
                     id: (d.id || "").replace(/\s/g, ''),
                     title: d.title || d.id || "Unnamed Node",
                     domains: extractedDomains.length > 0 ? extractedDomains : ["Core"],
                     meta: d.meta || "",
                     desc: d.desc || d.description || "",
-                    img: rawImage
+                    img: d.img || d.image || ""
                 };
             }).filter(n => n.id !== "");
 
@@ -673,9 +674,9 @@
                     if (isConnected) {
                         nodeClass += 'highlighted force-visible';
                     } else if (currentSubjectFilter && !isConclusion && isInTheme) {
-                        nodeClass += 'theme-dimmed';
+                        nodeClass += 'theme-dimmed'; 
                     } else {
-                        nodeClass += 'dimmed';
+                        nodeClass += 'dimmed'; 
                     }
                     d3.select(this).attr('class', nodeClass);
                 });
@@ -696,14 +697,24 @@
                 document.getElementById('panel-meta').innerText = d.meta;
                 document.getElementById('panel-desc').innerHTML = d.desc.replace(citeCleaner, '');
                 
+                // ULTIMATE IMAGE FIX
                 const mediaContainer = document.getElementById('panel-media');
+                const imgElement = document.getElementById('panel-img');
+                
                 if (d.img && d.img.trim() !== "") {
                     let imagePath = d.img.trim();
-                    // Force the path to match GitHub's case-sensitive 'Images' folder
+                    
+                    // Match the case-sensitive 'Images' folder perfectly
                     if (!imagePath.startsWith('http') && !imagePath.toLowerCase().startsWith('images/') && !imagePath.startsWith('data:')) {
                         imagePath = 'Images/' + imagePath;
                     }
-                    document.getElementById('panel-img').src = imagePath;
+                    
+                    imgElement.src = imagePath;
+                    
+                    // Invisible error tracker to catch silent failures
+                    imgElement.onerror = () => console.error("Image failed to load but was requested:", imagePath);
+                    imgElement.onload = () => console.log("Image loaded successfully:", imagePath);
+                    
                     mediaContainer.classList.add('active');
                 } else {
                     mediaContainer.classList.remove('active');
