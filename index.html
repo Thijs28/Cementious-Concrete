@@ -705,7 +705,7 @@
                 if (d.img && d.img !== "") {
                     let imagePath = d.img;
                     if (!imagePath.startsWith('http') && !imagePath.startsWith('images/') && !imagePath.startsWith('data:')) {
-                        imagePath = 'images/' + imagePath;
+                        imagePath = 'Images/' + imagePath;
                     }
                     document.getElementById('panel-img').src = imagePath;
                     mediaContainer.classList.add('active');
