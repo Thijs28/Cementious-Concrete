@@ -256,7 +256,14 @@
                 }
 
                 // BULLETPROOF IMAGE LOGIC
-                const rawImage = d.img || d['img name'] || d.image || d.picture || d['img_name'] || "";
+                let rawImage = "";
+                for (let key in d) {
+                    let val = (d[key] || "").trim();
+                    if ((val.endsWith('.jpg') || val.endsWith('.png') || val.endsWith('.jpeg')) && !val.includes(' ')) {
+                        rawImage = val;
+                        break;
+                    }
+                }
 
                 return {
                     id: (d.id || "").replace(/\s/g, ''),
