@@ -691,17 +691,26 @@
                 
                 const mediaContainer = document.getElementById('panel-media');
                 if (d.img && d.img !== "") {
-                    let imagePath = d.img.trim();
-                    if (!imagePath.startsWith('http') && !imagePath.toLowerCase().startsWith('images/') && !imagePath.startsWith('data:')) {
-                        imagePath = 'Images/' + imagePath;
-                    } else if (imagePath.startsWith('images/')) {
-                        imagePath = 'Images/' + imagePath.substring(7);
-                    }
-                    document.getElementById('panel-img').src = imagePath;
-                    mediaContainer.classList.add('active');
-                } else {
-                    mediaContainer.classList.remove('active');
+            let imagePath = d.img.trim();
+            
+            if (!imagePath.startsWith('http') && !imagePath.startsWith('data:')) {
+                // Remove 'Images/' if accidentally typed in Excel
+                if (imagePath.toLowerCase().startsWith('images/')) {
+                    imagePath = imagePath.substring(7);
                 }
+                // FIX: If the team forgot the extension, auto-append .jpg
+                if (!imagePath.includes('.')) {
+                    imagePath += '.jpg';
+                }
+                // Route to the strict case-sensitive GitHub folder
+                imagePath = 'Images/' + imagePath;
+            }
+            
+            document.getElementById('panel-img').src = imagePath;
+            mediaContainer.classList.add('active');
+        } else {
+            mediaContainer.classList.remove('active');
+        }
 
                 document.getElementById('panel-interdependencies').classList.add('active');
 
