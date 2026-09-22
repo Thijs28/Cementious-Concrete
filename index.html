@@ -85,8 +85,7 @@
         h1 { font-family: 'EB Garamond', serif; font-size: 2.6rem; font-weight: 400; margin: 0 0 15px 0; }
         .meta-data { font-size: 0.85rem; color: var(--text-muted); border-bottom: 1px solid #333945; padding-bottom: 20px; margin-bottom: 30px; text-transform: uppercase; letter-spacing: 1px;}
         
-        /* THE CSS FIX FOR INVISIBLE IMAGES */
-        .media-container { width: 100%; min-height: 280px; position: relative; background: #000; margin-bottom: 30px; border-radius: 6px; overflow: hidden; border: 1px solid #333945; display: none; }
+        .media-container { width: 100%; height: 260px; position: relative; background: #000; margin-bottom: 30px; border-radius: 6px; overflow: hidden; border: 1px solid #333945; display: none; }
         .media-container.active { display: block; }
         .media-container img { width: 100%; height: 100%; position: absolute; top: 0; left: 0; object-fit: contain; opacity: 0.95; }
         
@@ -201,14 +200,6 @@
                       .trim(); 
         };
 
-        const cleanCSVKeys = (obj) => {
-            const cleanObj = {};
-            for (let key in obj) {
-                cleanObj[strictNormalize(key)] = strictNormalize(obj[key]);
-            }
-            return cleanObj;
-        };
-
         let globalNodes = [];
         let globalLinks = [];
         let globalNodeGroups = null;
@@ -265,10 +256,14 @@
                 if (extractedDomains.length === 0 && d.domains && d.domains !== "") {
                     d.domains.split("|").forEach(dom => extractedDomains.push(strictNormalize(dom)));
                 }
+                
+                // Automatic Typo Fixer
+                let rawTitle = d.title || d.id || "Unnamed Node";
+                rawTitle = rawTitle.replace(/Cementious/gi, 'Cementitious');
 
                 return {
                     id: (d.id || "").replace(/\s/g, ''),
-                    title: d.title || d.id || "Unnamed Node",
+                    title: rawTitle,
                     domains: extractedDomains.length > 0 ? extractedDomains : ["Core"],
                     meta: d.meta || "",
                     desc: d.desc || d.description || "",
@@ -307,7 +302,7 @@
                     const item = document.createElement('div');
                     item.className = 'legend-item';
                     item.dataset.index = index; 
-                    item.onclick = () => toggleSubjectFilter(subject, index);
+                    item.onclick = () => toggleSubjectFilter(subject, index, false);
                     item.innerHTML = `<div class="legend-number">${index + 1}</div><span>${subject}</span>`;
                     legendContainer.appendChild(item);
                 });
@@ -442,94 +437,112 @@
         function dragged(e, d) { d.fx = e.x; d.fy = e.y; }
         function dragend(e, d) { if (!e.active) simulation.alphaTarget(0); d.fx = null; d.fy = null; }
 
-        function toggleSubjectFilter(subject, index) {
+        function toggleSubjectFilter(subject, index, force = false) {
             const wasActive = (currentSubjectFilter === subject);
-            endPresentationMode(); 
-            
-            if (wasActive) {
+
+            if (wasActive && !force) {
+                endPresentationMode();
                 resetGraph();
-            } else {
-                currentSubjectFilter = subject;
-                let isConclusion = subject.toLowerCase() === "conclusion";
-
-                d3.selectAll('.legend-item').classed('active', false);
-                d3.selectAll('.legend-item').filter(function() { return parseInt(this.dataset.index) === index; }).classed('active', true);
-                
-                const orderedNodeIds = presentationData[subject] || [];
-                presentationQueue = [];
-                
-                orderedNodeIds.forEach(id => {
-                    const foundNode = globalNodes.find(n => n.id === id);
-                    if (foundNode) presentationQueue.push(foundNode);
-                });
-
-                const activeIds = presentationQueue.map(n => n.id);
-
-                if (isConclusion) {
-                    d3.selectAll('.graph-element').attr('class', 'node graph-element');
-                    d3.selectAll('.link-line').attr('class', 'link-line');
-                    d3.selectAll('.node-label').attr('class', 'node-label').classed('hub-label', d => d.isHub).classed('central-node-text', d => d.isCentral);
-                } else {
-                    d3.selectAll('.graph-element').attr('class', 'node graph-element dimmed');
-                    d3.selectAll('.link-line').attr('class', 'link-line dimmed');
-                    d3.selectAll('.link-label').attr('class', 'link-label');
-                    d3.selectAll('.node-label').attr('class', 'node-label');
-                    
-                    globalNodeGroups.filter(n => activeIds.includes(n.id)).classed('dimmed', false).classed('highlighted', true);
-                    globalLinkPaths.filter(l => activeIds.includes(l.source.id) && activeIds.includes(l.target.id))
-                        .classed('dimmed', false)
-                        .classed('highlighted-link', true);
-                        
-                    globalNodeGroups.selectAll('.node-label')
-                        .classed('central-node-text', d => d.isCentral);
-                }
-                
-                document.getElementById('panel-domain-container').innerHTML = `<div class="domain-tag" style="background:var(--accent); color:#000; border-color:var(--accent)">Thematic Focus</div>`;
-                document.getElementById('panel-title').innerText = subject;
-                document.getElementById('panel-meta').innerText = `${presentationQueue.length} Primary Nodes in Sequence`;
-                document.getElementById('panel-media').classList.remove('active');
-                document.getElementById('panel-interdependencies').classList.remove('active');
-                
-                let tocHTML = `<p style="margin-bottom: 25px;">This thematic cluster maps the structural and historical interdependencies defining this aspect of cementitious concrete. Use the arrows below or your keyboard to follow the narrative sequence.</p>`;
-                
-                presentationQueue.forEach((node, i) => {
-                    tocHTML += `
-                    <div class="toc-item" onclick="presentationIndex=${i}; handleNodeClick(presentationQueue[${i}])">
-                        <span class="toc-title">${i+1}. ${node.title}</span>
-                        <span class="toc-arrow">→</span>
-                    </div>`;
-                });
-                
-                document.getElementById('panel-desc').innerHTML = tocHTML;
-                document.getElementById('detail-panel').classList.add('active');
-
-                let zoomNodes = isConclusion ? globalNodes : presentationQueue;
-
-                if (zoomNodes.length > 0) {
-                    const pad = isConclusion ? 100 : 350; 
-                    const minX = d3.min(zoomNodes, d => d.x) - pad;
-                    const maxX = d3.max(zoomNodes, d => d.x) + pad;
-                    const minY = d3.min(zoomNodes, d => d.y) - pad;
-                    const maxY = d3.max(zoomNodes, d => d.y) + pad;
-
-                    const dx = maxX - minX; 
-                    const dy = maxY - minY;
-                    
-                    const viewWidth = width > 800 ? width - 600 : width;
-                    const viewHeight = height - 120;
-                    
-                    const scale = Math.max(0.1, Math.min(1.2, Math.min(viewWidth / dx, viewHeight / dy)));
-                    
-                    const cx = (minX + maxX) / 2;
-                    const cy = (minY + maxY) / 2;
-                    const offsetX = width > 800 ? (width - 600) / 2 : width / 2;
-                    
-                    svg.transition().duration(1000).call(zoom.transform, d3.zoomIdentity.translate(offsetX, height/2).scale(scale).translate(-cx, -cy));
-                }
-
-                presentationIndex = -1;
-                updatePresentationControls();
+                return;
             }
+            
+            endPresentationMode();
+            currentSubjectFilter = subject;
+            let isConclusion = subject.toLowerCase() === "conclusion";
+
+            d3.selectAll('.legend-item').classed('active', false);
+            d3.selectAll('.legend-item').filter(function() { return parseInt(this.dataset.index) === index; }).classed('active', true);
+            
+            const orderedNodeIds = presentationData[subject] || [];
+            presentationQueue = [];
+            
+            orderedNodeIds.forEach(id => {
+                const foundNode = globalNodes.find(n => n.id === id);
+                if (foundNode) presentationQueue.push(foundNode);
+            });
+
+            const activeIds = presentationQueue.map(n => n.id);
+
+            if (isConclusion) {
+                d3.selectAll('.graph-element').attr('class', 'node graph-element');
+                d3.selectAll('.link-line').attr('class', 'link-line');
+                d3.selectAll('.node-label').attr('class', 'node-label').classed('hub-label', d => d.isHub).classed('central-node-text', d => d.isCentral);
+            } else {
+                d3.selectAll('.graph-element').attr('class', 'node graph-element dimmed');
+                d3.selectAll('.link-line').attr('class', 'link-line dimmed');
+                d3.selectAll('.link-label').attr('class', 'link-label');
+                d3.selectAll('.node-label').attr('class', 'node-label');
+                
+                globalNodeGroups.filter(n => activeIds.includes(n.id)).classed('dimmed', false).classed('highlighted', true);
+                globalLinkPaths.filter(l => activeIds.includes(l.source.id) && activeIds.includes(l.target.id))
+                    .classed('dimmed', false)
+                    .classed('highlighted-link', true);
+                    
+                globalNodeGroups.selectAll('.node-label')
+                    .classed('central-node-text', d => d.isCentral);
+            }
+            
+            document.getElementById('panel-domain-container').innerHTML = `<div class="domain-tag" style="background:var(--accent); color:#000; border-color:var(--accent)">Thematic Focus</div>`;
+            document.getElementById('panel-title').innerText = subject;
+            document.getElementById('panel-meta').innerText = `${presentationQueue.length} Primary Nodes in Sequence`;
+            document.getElementById('panel-media').classList.remove('active');
+            document.getElementById('panel-interdependencies').classList.remove('active');
+            
+            let tocHTML = `<p style="margin-bottom: 25px;">`;
+            if (subject === "Scientific") {
+                tocHTML += `This thematic cluster examines the microscopic and chemical reality of cementitious concrete, mapping the thermochemical synthesis in the kiln, the nanoscale mechanics of hydration, and the chemical degradation processes that dictate the material's lifespan.`;
+            } else if (subject === "Technical") {
+                tocHTML += `This thematic cluster explores the physical production and engineering applications of cementitious concrete, detailing the extraction, crushing, mixing, and forming methods that transform raw geological matter into the world's most utilized building material.`;
+            } else if (subject === "Historical") {
+                tocHTML += `This thematic cluster traces the evolution of cementitious materials across human history, from early Neolithic lime binders and Roman volcanic concrete to the 19th-century invention and global standardization of modern Portland cement.`;
+            } else if (subject.includes("Geopolitical") || subject.includes("Economic")) {
+                tocHTML += `This thematic cluster analyzes the macro-scale impacts of cementitious concrete, exploring how its industrialization shaped global infrastructure, imperial expansion, multinational corporate consolidation, and the complex geopolitics of carbon emissions.`;
+            } else if (subject === "Ecological") {
+                tocHTML += `This thematic cluster confronts the profound environmental footprint of cementitious concrete, examining the ecological consequences of raw material extraction, immense freshwater consumption, habitat destruction, and the challenges of circularity and clinker reduction.`;
+            } else if (subject === "Sensory") {
+                tocHTML += `This thematic cluster investigates the phenomenological and architectural experience of cementitious concrete, exploring how surface finish, weathering, thermal mass, and visual weight shape our spatial perception and physical interaction with the material.`;
+            } else {
+                tocHTML += `This thematic cluster maps the structural and historical interdependencies defining this aspect of cementitious concrete. Use the arrows below or your keyboard to follow the narrative sequence.`;
+            }
+            tocHTML += `</p>`;
+            
+            presentationQueue.forEach((node, i) => {
+                tocHTML += `
+                <div class="toc-item" onclick="presentationIndex=${i}; handleNodeClick(presentationQueue[${i}])">
+                    <span class="toc-title">${i+1}. ${node.title}</span>
+                    <span class="toc-arrow">→</span>
+                </div>`;
+            });
+            
+            document.getElementById('panel-desc').innerHTML = tocHTML;
+            document.getElementById('detail-panel').classList.add('active');
+
+            let zoomNodes = isConclusion ? globalNodes : presentationQueue;
+
+            if (zoomNodes.length > 0) {
+                const pad = isConclusion ? 100 : 350; 
+                const minX = d3.min(zoomNodes, d => d.x) - pad;
+                const maxX = d3.max(zoomNodes, d => d.x) + pad;
+                const minY = d3.min(zoomNodes, d => d.y) - pad;
+                const maxY = d3.max(zoomNodes, d => d.y) + pad;
+
+                const dx = maxX - minX; 
+                const dy = maxY - minY;
+                
+                const viewWidth = width > 800 ? width - 600 : width;
+                const viewHeight = height - 120;
+                
+                const scale = Math.max(0.1, Math.min(1.2, Math.min(viewWidth / dx, viewHeight / dy)));
+                
+                const cx = (minX + maxX) / 2;
+                const cy = (minY + maxY) / 2;
+                const offsetX = width > 800 ? (width - 600) / 2 : width / 2;
+                
+                svg.transition().duration(1000).call(zoom.transform, d3.zoomIdentity.translate(offsetX, height/2).scale(scale).translate(-cx, -cy));
+            }
+
+            presentationIndex = -1;
+            updatePresentationControls();
         }
 
         document.addEventListener('keydown', (e) => {
@@ -552,7 +565,7 @@
                 let currentThemeIdx = thematicSubjects.indexOf(currentSubjectFilter);
                 if (currentThemeIdx !== -1) {
                     let nextIdx = (currentThemeIdx + 1) % thematicSubjects.length;
-                    toggleSubjectFilter(thematicSubjects[nextIdx], nextIdx);
+                    toggleSubjectFilter(thematicSubjects[nextIdx], nextIdx, true);
                 }
             }
         }
@@ -562,12 +575,15 @@
                 presentationIndex--;
                 handleNodeClick(presentationQueue[presentationIndex]);
             } else if (presentationIndex === 0) {
-                toggleSubjectFilter(currentSubjectFilter, thematicSubjects.indexOf(currentSubjectFilter));
+                // If on the first node, force open the overview of the CURRENT section
+                let currentThemeIdx = thematicSubjects.indexOf(currentSubjectFilter);
+                toggleSubjectFilter(currentSubjectFilter, currentThemeIdx, true);
             } else if (presentationIndex === -1 && currentSubjectFilter) {
+                // If on the overview, jump back to the LAST node of the PREVIOUS section
                 let currentThemeIdx = thematicSubjects.indexOf(currentSubjectFilter);
                 if (currentThemeIdx !== -1) {
                     let prevIdx = (currentThemeIdx - 1 + thematicSubjects.length) % thematicSubjects.length;
-                    toggleSubjectFilter(thematicSubjects[prevIdx], prevIdx);
+                    toggleSubjectFilter(thematicSubjects[prevIdx], prevIdx, true);
                     if (presentationQueue.length > 0) {
                         presentationIndex = presentationQueue.length - 1;
                         handleNodeClick(presentationQueue[presentationIndex]);
@@ -693,28 +709,25 @@
                     .classed('medium-label', n => n.id !== d.id && connectedNodes.includes(n.id) && !n.isCentral);
 
                 document.getElementById('panel-domain-container').innerHTML = d.domains.map(dom => `<div class="domain-tag" style="background:${domainColors[dom] || '#ffffff'}33; border-color:${domainColors[dom] || '#ffffff'}">${dom}</div>`).join('');
+                
                 document.getElementById('panel-title').innerText = d.title;
                 document.getElementById('panel-meta').innerText = d.meta;
-                document.getElementById('panel-desc').innerHTML = d.desc.replace(citeCleaner, '');
                 
-                // ULTIMATE IMAGE FIX
+                // Automatic Typo Fixer
+                let cleanDesc = d.desc.replace(citeCleaner, '');
+                cleanDesc = cleanDesc.replace(/Cementious/gi, 'Cementitious');
+                document.getElementById('panel-desc').innerHTML = cleanDesc;
+                
                 const mediaContainer = document.getElementById('panel-media');
                 const imgElement = document.getElementById('panel-img');
                 
                 if (d.img && d.img.trim() !== "") {
                     let imagePath = d.img.trim();
-                    
-                    // Match the case-sensitive 'Images' folder perfectly
                     if (!imagePath.startsWith('http') && !imagePath.toLowerCase().startsWith('images/') && !imagePath.startsWith('data:')) {
                         imagePath = 'Images/' + imagePath;
                     }
-                    
                     imgElement.src = imagePath;
-                    
-                    // Invisible error tracker to catch silent failures
                     imgElement.onerror = () => console.error("Image failed to load but was requested:", imagePath);
-                    imgElement.onload = () => console.log("Image loaded successfully:", imagePath);
-                    
                     mediaContainer.classList.add('active');
                 } else {
                     mediaContainer.classList.remove('active');
@@ -740,7 +753,7 @@
                         
                         linksHTML += `
                         <div class="interdependency-sentence">
-                            <span class="node-link" style="color:${d.fallbackColor}" onclick="window.jumpToNodeUI('${d.id}')">${d.title}</span> 
+                            <span class="node-link" style="color:${d.fallbackColor}" onclick="window.jumpToNodeUI('${d.id}')">${related.title}</span> 
                             <span class="verb-text">${verb}</span> 
                             <span class="node-link" style="color:${related.fallbackColor}" onclick="window.jumpToNodeUI('${related.id}')">${related.title}</span>.
                         </div>`;
