@@ -487,7 +487,7 @@ C2S_Reaction;Dicalcium Silicate: 2CaO + SiO₂ → 2CaO·SiO₂;Scientific;;;Pro
 C3S_Reaction;Tricalcium Silicate: 3CaO + SiO₂ → 3CaO·SiO₂;Scientific;;;Production of Cement and Concrete;Chemical Equation;Occurs between 1200°C and 1450°C. This reaction fuses calcium and silicate to form the Alite (C₃S) clinker phase.;;;;;
 C3A_Reaction;Tricalcium Aluminate: 3CaO + Al₂O₃ → 3CaO·Al₂O₃;Scientific;;;Production of Cement and Concrete;Chemical Equation;Occurs between 1300°C and 1450°C. Aluminium acts primarily to lower the extreme temperatures needed for the main silicate reactions to occur.;;;;;
 C4AF_Reaction;Tetracalcium Aluminoferrite: 4CaO + Al₂O₃ + Fe₂O₃;Scientific;;;Production of Cement and Concrete;Chemical Equation;Occurs between 1300°C and 1450°C. Iron, alongside aluminium, is crucial for lowering the overall kiln temperature required to successfully fuse the raw materials.;;;;;
-Central_Node;Cementious Concrete;;;;;;;Central_Node.jpg;;;;
+Central_Node;Cementitious Concrete;;;;;;;Central_Node.jpg;;;;
 ;;;;;;;;;;;;
 ;;;;;;;;;;;;
 ;;;;;;;;;;;;
